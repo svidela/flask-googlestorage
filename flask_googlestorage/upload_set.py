@@ -1,7 +1,13 @@
+import base64
+import hashlib
+import uuid
+from datetime import timedelta
 from pathlib import Path, PurePath
-from typing import Tuple, Callable
+from typing import Tuple, Callable, Union
 
 from flask import Flask, current_app, url_for
+from google import cloud
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 from werkzeug.datastructures import FileStorage
 
 from .extensions import DEFAULTS
@@ -70,6 +76,11 @@ class UploadSet:
     def root(self, folder: str = None) -> Path:
         return self.config.destination if folder is None else self.config.destination / folder
 
+    def blob(self, filename: str) -> Union[cloud.storage.Bucket, None]:
+        bucket = self.config.bucket
+        if bucket:
+            return bucket.get_blob(filename)
+
     def url(self, filename: str) -> str:
         """
         This function gets the URL a file uploaded to this set would be
@@ -77,13 +88,25 @@ class UploadSet:
 
         :param filename: The filename to return the URL for.
         """
-        base = self.config.base_url
-        if base is None:
-            return url_for(
-                "_uploads.download_file", setname=self.name, filename=filename, _external=True,
-            )
+        blob = self.blob(filename)
+        if blob:
+            return blob.public_url
         else:
-            return base + filename
+            base = self.config.base_url
+            if base is None:
+                return url_for(
+                    "_uploads.download_file", name=self.name, filename=filename, _external=True,
+                )
+            else:
+                return base + filename
+
+    def signed_url(self, filename: str) -> str:
+        blob = self.blob(filename)
+        if blob:
+            ext = current_app.extensions["flask-google-storage"]["ext_obj"]
+            return blob.generate_signed_url(timedelta(**ext.signed_url_config))
+        else:
+            return self.url(filename)
 
     def path(self, filename: str, folder: str = None) -> Path:
         """
@@ -120,7 +143,14 @@ class UploadSet:
             ext in self.extensions and ext not in self.config.deny
         )
 
-    def save(self, storage: FileStorage, folder: str = None, name: str = None) -> PurePath:
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+        retry=retry_if_exception_type(cloud.exceptions.GoogleCloudError),
+    )
+    def save(
+        self, storage: FileStorage, folder: str = None, name: str = None, public: bool = False
+    ) -> PurePath:
         """
         This saves a `werkzeug.FileStorage` into this upload set. If the
         upload is not allowed, an `NotAllowedUploadError` error will be raised.
@@ -134,6 +164,7 @@ class UploadSet:
                      are using `name`, you can include the folder in the
                      `name` instead of explicitly using `folder`, i.e.
                      ``uset.save(file, name="someguy/photo_123.")``
+        :param public: Whether to mark the file as public in the bucket.
         """
         if not isinstance(storage, FileStorage):
             raise TypeError("The given storage must be a werkzeug.FileStorage instance")
@@ -155,16 +186,33 @@ class UploadSet:
         root = self.root(folder)
         root.mkdir(parents=True, exist_ok=True)
 
-        if (root / basename).exists():
+        filepath = root / basename
+        if filepath.exists():
             basename = self.resolve_conflict(root, basename)
+            filepath = root / basename
 
-        storage.save(root / basename)
-        if folder:
-            return PurePath(folder, basename)
-        else:
-            return PurePath(basename)
+        storage.save(filepath)
+        fullname = PurePath(folder, basename) if folder else PurePath(basename)
 
-    def resolve_conflict(self, root: Path, basename: PurePath):
+        cfg = self.config
+        if cfg.bucket:
+            fullpath = self.path(fullname)
+            blob_name = fullname if name else f"{uuid.uuid4()}{basename.suffix}"
+            blob = cfg.bucket.blob(str(blob_name))
+            fullname = PurePath(blob.name)
+
+            try:
+                md5_hash = hashlib.md5(fullpath.read_bytes())
+                blob.md5_hash = base64.b64encode(md5_hash.digest()).decode()
+                blob.upload_from_filename(fullpath)  # it may raise GoogleCloudError
+                if public:
+                    blob.make_public()
+            finally:
+                fullpath.unlink()
+
+        return fullname
+
+    def resolve_conflict(self, root: Path, basename: PurePath) -> PurePath:
         """
         If a file with the selected name already exists in the target folder,
         this method is called to resolve the conflict. It should return a new
@@ -181,6 +229,15 @@ class UploadSet:
         count = 0
         while True:
             count += 1
-            new_name = f"{stem}_{count}{suffix}"
+            new_name = basename.with_name(f"{stem}_{count}{suffix}")
             if not (root / new_name).exists():
                 return new_name
+
+    def delete(self, filename: str):
+        blob = self.blob(filename)
+        if blob:
+            blob.delete()
+        else:
+            fullpath = self.path(filename)
+            if fullpath.is_file():
+                fullpath.unlink()

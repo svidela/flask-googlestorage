@@ -111,7 +111,7 @@ def test_url_generated(app_serve):
     uset = UploadSet("files")
     with app_serve.test_request_context():
         url = uset.url("foo.txt")
-        gen = url_for("_uploads.download_file", setname="files", filename="foo.txt", _external=True)
+        gen = url_for("_uploads.download_file", name="files", filename="foo.txt", _external=True)
         assert url == gen
 
 
@@ -176,3 +176,63 @@ def test_non_ascii_filename(file_storage_cls, tmp_uploadset):
 @pytest.mark.parametrize("extension, expected", [("txt", True), ("jpg", True), ("exe", False)])
 def test_default_extensions(extension, expected, tmp_uploadset):
     assert tmp_uploadset.extension_allowed(extension) == expected
+
+
+@pytest.mark.parametrize("name", ("empty.txt", "files/empty.txt"))
+def test_save_google_storage(name, empty_txt, bucket_uploadset):
+    res = bucket_uploadset.save(empty_txt, name=name)
+    assert res == pathlib.PurePath(name)
+
+
+@pytest.mark.parametrize("public", (True, False))
+def test_save_public_google_storage(public, google_bucket_mock, empty_txt, bucket_uploadset):
+    bucket_uploadset.save(empty_txt, public=public)
+    if public:
+        google_bucket_mock.get_blob().make_public.assert_called_once()
+    else:
+        google_bucket_mock.get_blob().make_public.assert_not_called()
+
+
+def test_delete_local(file_storage_cls, tmpdir):
+    dst = pathlib.Path(tmpdir)
+    upload_set = UploadSet("files")
+    upload_set._config = UploadConfiguration(dst)
+
+    foo = dst / "foo.txt"
+    foo.touch()
+
+    upload_set.delete("foo.txt")
+
+    assert not foo.exists()
+
+
+def test_delete_google_storage(bucket_uploadset, google_bucket_mock):
+    bucket_uploadset.delete("foo.txt")
+    google_bucket_mock.get_blob().delete.assert_called_once()
+
+
+def test_url_google_storage(app_cloud):
+    uset = UploadSet("files")
+    uset.url("foo.txt") == "http://google-storage-url/"
+
+
+def test_signed_url_google_storage(app_cloud):
+    uset = UploadSet("files")
+    uset.signed_url("foo.txt") == "http://google-storage-signed-url/"
+
+
+def test_signed_url_generated_fallback(app_serve):
+    uset = UploadSet("files")
+    with app_serve.test_request_context():
+        url = uset.signed_url("foo.txt")
+        gen = url_for("_uploads.download_file", name="files", filename="foo.txt", _external=True)
+        assert url == gen
+
+
+def test_sigend_url_based_fallback(app_manual):
+    uset = UploadSet("files")
+    with app_manual.test_request_context():
+        url = uset.signed_url("foo.txt")
+        assert url == "http://localhost:6001/foo.txt"
+
+    assert "_uploads" not in app_manual.blueprints

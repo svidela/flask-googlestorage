@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Tuple
 
 from flask import Flask
+from google import auth, cloud
 
 from .blueprint import bp
 from .exceptions import NotFoundDestinationError
@@ -20,11 +21,18 @@ class GoogleStorage:
     def init_app(self, app: Flask):
         self._app = app
 
+        try:
+            self.client = cloud.storage.Client()
+        except auth.exceptions.DefaultCredentialsError:
+            app.logger.warning("Could not authenticate the Google Cloud Storage client")
+            self.client = None
+
         app.extensions = getattr(app, "extensions", {})
         ext = app.extensions.setdefault("flask-google-storage", {})
         ext["ext_obj"] = self
         ext["config"] = {}
 
+        self.signed_url_config = app.config.get("SIGNED_URL_EXPIRATION", {"minutes": 5})
         for uset in self.upload_sets:
             config = self._configure_upload_set(uset)
             ext["config"][uset.name] = config
@@ -46,7 +54,15 @@ class GoogleStorage:
             if base_url is None and default_config:
                 base_url = self._default_base_url(uset)
 
-        return UploadConfiguration(Path(destination), base_url, allow_extns, deny_extns)
+        bucket = None
+        bucket_name = cfg.get(prefix + "BUCKET")
+        if self.client and bucket_name:
+            try:
+                bucket = self.client.get_bucket(bucket_name)
+            except cloud.exceptions.NotFound:
+                self._app.logger.warning(f"Could not found the bucket for {uset.name}")
+
+        return UploadConfiguration(Path(destination), base_url, allow_extns, deny_extns, bucket)
 
     def _default_destination(self, uset: UploadSet) -> str:
         if uset.default_dest:
