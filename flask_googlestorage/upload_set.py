@@ -3,9 +3,9 @@ import hashlib
 import uuid
 from datetime import timedelta
 from pathlib import Path, PurePath
-from typing import Tuple, Callable, Union
+from typing import Tuple, Union
 
-from flask import Flask, current_app, url_for
+from flask import current_app, url_for
 from google import cloud
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 from werkzeug.datastructures import FileStorage
@@ -32,24 +32,15 @@ class UploadSet:
                        It can be overridden by the configuration with the
                        `UPLOADED_X_ALLOW` and `UPLOADED_X_DENY` configuration
                        parameters. The default is `DEFAULTS`.
-    :param default_dest: If given, this should be a callable. If you call it
-                         with the app, it should return the default upload
-                         destination path for that app.
     """
 
-    def __init__(
-        self,
-        name: str = "files",
-        extensions: Tuple[str, ...] = DEFAULTS,
-        default_dest: Callable[[Flask], str] = None,
-    ):
+    def __init__(self, name: str = "files", extensions: Tuple[str, ...] = DEFAULTS):
         if not name.isalnum():
             raise ValueError("Name must be alphanumeric (no underscores)")
 
         self.name = name
         self.extensions = extensions
         self._config = None
-        self.default_dest = default_dest
 
     @property
     def config(self) -> UploadConfiguration:
@@ -92,13 +83,9 @@ class UploadSet:
         if blob:
             return blob.public_url
         else:
-            base = self.config.base_url
-            if base is None:
-                return url_for(
-                    "_uploads.download_file", name=self.name, filename=filename, _external=True,
-                )
-            else:
-                return base + filename
+            return url_for(
+                "_uploads.download_file", name=self.name, filename=filename, _external=True
+            )
 
     def signed_url(self, filename: str) -> str:
         blob = self.blob(filename)
