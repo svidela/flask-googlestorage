@@ -76,7 +76,7 @@ class UploadSet:
     def root(self, folder: str = None) -> Path:
         return self.config.destination if folder is None else self.config.destination / folder
 
-    def blob(self, filename: str) -> Union[cloud.storage.Bucket, None]:
+    def blob(self, filename: str) -> Union[cloud.storage.Blob, None]:
         bucket = self.config.bucket
         if bucket:
             return bucket.get_blob(filename)
@@ -114,8 +114,7 @@ class UploadSet:
         doesn't actually check whether said file exists.
 
         :param filename: The filename to return the path for.
-        :param folder: The subfolder within the upload set previously used
-                       to save to.
+        :param folder: The subfolder within the upload set previously used to save to.
         """
         return self.root(folder) / filename
 
@@ -149,7 +148,13 @@ class UploadSet:
         retry=retry_if_exception_type(cloud.exceptions.GoogleCloudError),
     )
     def save(
-        self, storage: FileStorage, folder: str = None, name: str = None, public: bool = False
+        self,
+        storage: FileStorage,
+        folder: str = None,
+        name: str = None,
+        public: bool = False,
+        keep_local: bool = False,
+        resolve_conflict: bool = False,
     ) -> PurePath:
         """
         This saves a `werkzeug.FileStorage` into this upload set. If the
@@ -165,6 +170,8 @@ class UploadSet:
                      `name` instead of explicitly using `folder`, i.e.
                      ``uset.save(file, name="someguy/photo_123.")``
         :param public: Whether to mark the file as public in the bucket.
+        :param keep_local: Whether to keep local file after uploading to the bucket.
+        :param resolve_conflict: Whether to resolve name conflict or simply overwrite
         """
         if not isinstance(storage, FileStorage):
             raise TypeError("The given storage must be a werkzeug.FileStorage instance")
@@ -187,7 +194,7 @@ class UploadSet:
         root.mkdir(parents=True, exist_ok=True)
 
         filepath = root / basename
-        if filepath.exists():
+        if resolve_conflict and filepath.exists():
             basename = self.resolve_conflict(root, basename)
             filepath = root / basename
 
@@ -208,7 +215,8 @@ class UploadSet:
                 if public:
                     blob.make_public()
             finally:
-                fullpath.unlink()
+                if not keep_local:
+                    fullpath.unlink()
 
         return fullname
 
