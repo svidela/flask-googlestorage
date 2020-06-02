@@ -64,3 +64,9 @@ def test_callable_default_dest(app_callable_default_dest):
     assert storage_config["photos"] == UploadConfiguration(
         Path("/mnt/photos"), "http://localhost:6002/"
     )
+
+
+def test_google_cloud_storage(app_cloud):
+    storage_config = app_cloud.extensions["flask-google-storage"]["config"]
+    assert storage_config["files"].bucket
+    assert storage_config["photos"].bucket
