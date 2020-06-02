@@ -5,6 +5,7 @@ from unittest import mock
 
 import pytest
 from flask import Flask
+from google.cloud.exceptions import NotFound
 from werkzeug.datastructures import FileStorage
 
 from flask_googlestorage import UploadSet, GoogleStorage
@@ -179,8 +180,14 @@ def google_bucket_mock():
 @pytest.fixture
 def google_storage_mock(google_bucket_mock):
     client = mock.MagicMock()
-    client.get_bucket.return_value = google_bucket_mock
 
+    def get_bucket(name):
+        if name == "files-bucket":
+            return google_bucket_mock
+        else:
+            raise NotFound("Bucket not found")
+
+    client.get_bucket.side_effect = get_bucket
     with mock.patch("google.cloud.storage.Client", return_value=client):
         yield
 

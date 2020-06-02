@@ -69,4 +69,4 @@ def test_callable_default_dest(app_callable_default_dest):
 def test_google_cloud_storage(app_cloud):
     storage_config = app_cloud.extensions["flask-google-storage"]["config"]
     assert storage_config["files"].bucket
-    assert storage_config["photos"].bucket
+    assert storage_config["photos"].bucket is None
