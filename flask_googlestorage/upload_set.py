@@ -229,9 +229,9 @@ class UploadSet:
         count = 0
         while True:
             count += 1
-            new_name = f"{stem}_{count}{suffix}"
+            new_name = basename.with_name(f"{stem}_{count}{suffix}")
             if not (root / new_name).exists():
-                return PurePath(new_name)
+                return new_name
 
     def delete(self, filename: str):
         blob = self.blob(filename)
