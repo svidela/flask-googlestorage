@@ -124,15 +124,17 @@ def test_url_based(app_manual):
     assert "_uploads" not in app_manual.blueprints
 
 
-def test_conflict(file_storage_cls, tmp_uploadset):
+@pytest.mark.parametrize("resolve, expected", [(True, "foo_1.txt"), (False, "foo.txt")])
+def test_conflict(resolve, expected, file_storage_cls, tmp_uploadset):
     tfs = file_storage_cls(filename="foo.txt")
     foo = pathlib.Path(tmp_uploadset.config.destination) / "foo.txt"
     foo.touch()
-    res = tmp_uploadset.save(tfs)
-    assert res.name == "foo_1.txt"
+    res = tmp_uploadset.save(tfs, resolve_conflict=resolve)
+    assert res.name == expected
 
 
-def test_multi_conflict(file_storage_cls, tmp_uploadset):
+@pytest.mark.parametrize("resolve, expected", [(True, "foo_6.txt"), (False, "foo.txt")])
+def test_multi_conflict(resolve, expected, file_storage_cls, tmp_uploadset):
     tfs = file_storage_cls(filename="foo.txt")
     foo = pathlib.Path(tmp_uploadset.config.destination) / "foo.txt"
     foo.touch()
@@ -140,11 +142,12 @@ def test_multi_conflict(file_storage_cls, tmp_uploadset):
         foo_n = pathlib.Path(tmp_uploadset.config.destination) / f"foo_{n}.txt"
         foo_n.touch()
 
-    res = tmp_uploadset.save(tfs)
-    assert res.name == "foo_6.txt"
+    res = tmp_uploadset.save(tfs, resolve_conflict=resolve)
+    assert res.name == expected
 
 
-def test_conflict_without_extension(file_storage_cls, tmpdir):
+@pytest.mark.parametrize("resolve, expected", [(True, "foo_1"), (False, "foo")])
+def test_conflict_without_extension(resolve, expected, file_storage_cls, tmpdir):
     dst = pathlib.Path(tmpdir)
     upload_set = UploadSet("files", extensions=(""))
     upload_set._config = UploadConfiguration(dst)
@@ -153,8 +156,8 @@ def test_conflict_without_extension(file_storage_cls, tmpdir):
     foo = upload_set.config.destination / "foo"
     foo.touch()
 
-    res = upload_set.save(tfs)
-    assert res.name == "foo_1"
+    res = upload_set.save(tfs, resolve_conflict=resolve)
+    assert res.name == expected
 
 
 @pytest.mark.parametrize(
@@ -178,10 +181,14 @@ def test_default_extensions(extension, expected, tmp_uploadset):
     assert tmp_uploadset.extension_allowed(extension) == expected
 
 
-@pytest.mark.parametrize("name", ("empty.txt", "files/empty.txt"))
-def test_save_google_storage(name, empty_txt, bucket_uploadset):
-    res = bucket_uploadset.save(empty_txt, name=name)
+@pytest.mark.parametrize("name, keep_local", [("empty.txt", True), ("files/empty.txt", False)])
+def test_save_google_storage(name, keep_local, empty_txt, bucket_uploadset):
+    res = bucket_uploadset.save(empty_txt, name=name, keep_local=keep_local)
     assert res == pathlib.PurePath(name)
+    if keep_local:
+        assert (bucket_uploadset._config.destination / name).exists()
+    else:
+        assert not (bucket_uploadset._config.destination / name).exists()
 
 
 @pytest.mark.parametrize("public", (True, False))
