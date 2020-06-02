@@ -8,8 +8,8 @@ from google.cloud.storage import Bucket
 @dataclass
 class UploadConfiguration:
     """
-    This holds the configuration for a single `UploadSet`. The constructor's
-    arguments are also the attributes.
+    This holds the configuration for a single `UploadSet`. The constructor's arguments are also the
+    attributes.
 
     :param destination: The directory to save files to.
     :param allow: Tuple of extensions to allow, even if they're not in the `UploadSet` extensions.

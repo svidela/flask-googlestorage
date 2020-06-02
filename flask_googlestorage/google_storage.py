@@ -32,7 +32,7 @@ class GoogleStorage:
             self.client = None
 
         app.extensions = getattr(app, "extensions", {})
-        ext = app.extensions.setdefault("flask-google-storage", {})
+        ext = app.extensions.setdefault("google-storage", {})
         ext["ext_obj"] = self
         ext["config"] = {}
 

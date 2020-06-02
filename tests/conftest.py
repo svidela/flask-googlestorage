@@ -62,7 +62,7 @@ def file_storage_cls():
 def tmp_uploadset(tmpdir):
     dst = str(tmpdir)
     upload_set = UploadSet("files")
-    upload_set._config = UploadConfiguration(pathlib.Path(dst))
+    upload_set.config = UploadConfiguration(pathlib.Path(dst))
 
     return upload_set
 
@@ -110,7 +110,7 @@ def google_storage_mock(google_bucket_mock):
 def bucket_uploadset(google_bucket_mock, tmpdir):
     dst = pathlib.Path(tmpdir)
     upload_set = UploadSet("files")
-    upload_set._config = UploadConfiguration(dst, bucket=google_bucket_mock)
+    upload_set.config = UploadConfiguration(dst, bucket=google_bucket_mock)
 
     return upload_set
 

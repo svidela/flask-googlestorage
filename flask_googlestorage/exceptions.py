@@ -1,10 +1,3 @@
-class NotInitializedStorageError(Exception):
-    """
-    This exception is raised if the user attempts to read an UploadSet config
-    without calling the init_app method of the extension first.
-    """
-
-
 class NotFoundDestinationError(Exception):
     """
     This exception is raised if a destination cannot be found for a given UploadSet

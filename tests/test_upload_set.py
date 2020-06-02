@@ -6,11 +6,7 @@ from flask import url_for
 from flask_googlestorage import UploadSet
 from flask_googlestorage.upload_configuration import UploadConfiguration
 from flask_googlestorage.extensions import ALL
-from flask_googlestorage.exceptions import (
-    NotInitializedStorageError,
-    NotFoundUploadSetError,
-    NotAllowedUploadError,
-)
+from flask_googlestorage.exceptions import NotFoundUploadSetError, NotAllowedUploadError
 
 
 def test_name_alnum():
@@ -18,6 +14,14 @@ def test_name_alnum():
         UploadSet("my_files")
 
     assert str(e_info.value) == "Name must be alphanumeric (no underscores)"
+
+
+def test_set_config_error():
+    uset = UploadSet("files")
+    with pytest.raises(TypeError) as e_info:
+        uset.config = "Not valid"
+
+    assert str(e_info.value) == "You must pass an 'UploadConfiguration' object"
 
 
 def test_config_runtime_error():
@@ -29,11 +33,14 @@ def test_config_runtime_error():
 
 
 def test_config_not_init_error(app):
-    with pytest.raises(NotInitializedStorageError) as e_info:
+    with pytest.raises(AssertionError) as e_info:
         uset = UploadSet("files")
         uset.config
 
-    assert str(e_info.value) == "Flask-GoogleStorage extension was not initialized"
+    assert str(e_info.value) == (
+        "The google-storage extension was not registered to the current "
+        "application. Please make sure to call init_app() first."
+    )
 
 
 def test_config_not_found_error(app_init):
@@ -83,7 +90,7 @@ def test_save_not_allowed(file_storage_cls, tmp_uploadset):
 def test_secured_filename(filename, expected, file_storage_cls, tmpdir):
     dst = pathlib.Path(tmpdir)
     uset = UploadSet("files", ALL)
-    uset._config = UploadConfiguration(dst)
+    uset.config = UploadConfiguration(dst)
     tfs = file_storage_cls(filename=filename)
     res = uset.save(tfs)
     assert res.name == expected
@@ -194,7 +201,7 @@ def test_save_public_google_storage(public, google_bucket_mock, empty_txt, bucke
 def test_delete_local(file_storage_cls, tmpdir):
     dst = pathlib.Path(tmpdir)
     upload_set = UploadSet("files")
-    upload_set._config = UploadConfiguration(dst)
+    upload_set.config = UploadConfiguration(dst)
 
     foo = dst / "foo.txt"
     foo.touch()

@@ -4,6 +4,7 @@ import pytest
 
 from flask_googlestorage import GoogleStorage, UploadSet
 from flask_googlestorage.exceptions import NotFoundDestinationError
+from flask_googlestorage.utils import get_state
 from flask_googlestorage.upload_configuration import UploadConfiguration
 
 
@@ -17,12 +18,12 @@ def test_missing_conf(app):
 
 
 def test_defaults(app_init):
-    storage_config = app_init.extensions["flask-google-storage"]["config"]
+    storage_config = get_state(app_init)["config"]
     assert storage_config["files"] == UploadConfiguration(Path("/var/uploads/files"))
     assert storage_config["photos"] == UploadConfiguration(Path("/var/uploads/photos"))
 
 
 def test_google_cloud_storage(app_cloud):
-    storage_config = app_cloud.extensions["flask-google-storage"]["config"]
+    storage_config = get_state(app_cloud)["config"]
     assert storage_config["files"].bucket
     assert storage_config["photos"].bucket is None

@@ -11,27 +11,23 @@ from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_excep
 from werkzeug.datastructures import FileStorage
 
 from .extensions import DEFAULTS
-from .exceptions import NotAllowedUploadError, NotInitializedStorageError, NotFoundUploadSetError
-from .utils import secure_filename_ext
+from .exceptions import NotAllowedUploadError, NotFoundUploadSetError
+from .utils import secure_filename_ext, get_state
 from .upload_configuration import UploadConfiguration
 
 
 class UploadSet:
     """
-    This represents a single set of uploaded files. Each upload set is
-    independent of the others. This can be reused across multiple application
-    instances, as all configuration is stored on the application object itself
-    and found with `flask.current_app`.
+    This represents a single set of uploaded files. Each upload set is independent of the others.
+    This can be reused across multiple application instances, as all configuration is stored on the
+    application object itself and found using `flask.current_app`.
 
-    :param name: The name of this upload set. It defaults to ``files``, but
-                 you can pick any alphanumeric name you want. (For simplicity,
-                 it's best to use a plural noun.)
-    :param extensions: The extensions to allow uploading in this set. The
-                       easiest way to do this is to add together the extension
-                       presets (for example, ``TEXT + DOCUMENTS + IMAGES``).
-                       It can be overridden by the configuration with the
-                       `UPLOADED_X_ALLOW` and `UPLOADED_X_DENY` configuration
-                       parameters. The default is `DEFAULTS`.
+    :param name: The name of this upload set. It defaults to ``files``, but you can pick any
+                 alphanumeric name you want. (For simplicity, it's best to use a plural noun.)
+    :param extensions: The extensions to allow uploading in this set. The easiest way to do this is
+                       to add together the extension presets (for example, ``TEXT + DOCUMENTS +
+                       IMAGES``). It can be overridden by the configuration with the
+                       `UPLOADED_X_ALLOW` and `UPLOADED_X_DENY` configuration variables.
     """
 
     def __init__(self, name: str = "files", extensions: Tuple[str, ...] = DEFAULTS):
@@ -45,37 +41,54 @@ class UploadSet:
     @property
     def config(self) -> UploadConfiguration:
         """
-        This gets the current configuration. By default, it looks up the
-        current application and gets the configuration from there. But if you
-        don't want to go to the full effort of setting an application, or it's
-        otherwise outside of a request context, set the `_config` attribute to
-        an `UploadConfiguration` instance, then set it back to `None` when
-        you're done.
+        Returns the configuration for this `UploadSet`. Normally it will read the corresponding
+        `UploadConfiguration` stored in the `flask.current_app` object unless you set another
+        configuration manually.
         """
         if self._config is not None:
             return self._config
-        try:
-            cfg = current_app.extensions["flask-google-storage"]["config"]
-        except KeyError:
-            raise NotInitializedStorageError("Flask-GoogleStorage extension was not initialized")
 
+        cfg = get_state(current_app)["config"]
         try:
             return cfg[self.name]
         except KeyError:
             raise NotFoundUploadSetError(f"UploadSet {self.name} was not found")
 
+    @config.setter
+    def config(self, config: Union[UploadConfiguration, None]):
+        """
+        Sets the configuration object for this `UploadSet`.
+
+        :param config: Either a `UploadConfiguration` object or None
+        """
+        if config and not isinstance(config, UploadConfiguration):
+            raise TypeError("You must pass an 'UploadConfiguration' object")
+
+        self._config = config
+
     def root(self, folder: str = None) -> Path:
+        """
+        Returns the root destination for this upload set given an optional folder
+
+        :param: folder: Optional folder name
+        """
         return self.config.destination if folder is None else self.config.destination / folder
 
-    def blob(self, filename: str) -> Union[cloud.storage.Blob, None]:
+    def blob(self, name: str) -> Union[cloud.storage.Blob, None]:
+        """
+        Returns the `google.cloud.storage.Blob` object for the given name or `None` if either the
+        `UploadSet` doesn't have a bucket or the blob object is not found in the bucket.
+
+        :param filename: The blob name
+        """
         bucket = self.config.bucket
         if bucket:
-            return bucket.get_blob(filename)
+            return bucket.get_blob(name)
 
     def url(self, filename: str) -> str:
         """
-        This function gets the URL a file uploaded to this set would be
-        accessed at. It doesn't check whether said file exists.
+        Returns the URL for the given filename. If the corresponding blob object exists, it returns
+        its public URL. Otherwise the URL served by the Flask app is returned
 
         :param filename: The filename to return the URL for.
         """
@@ -88,17 +101,24 @@ class UploadSet:
             )
 
     def signed_url(self, filename: str) -> str:
+        """
+        Returns the signed URL for the given filename. If the corresponding blob object exists, it
+        returns a signed URL using the configuration found in the configuration variable
+        `SIGNED_URL_EXPIRATION`. Otherwise the (unsigned) URL served by the Flask app is returned
+
+        :param filename: The filename to return the URL for.
+        """
         blob = self.blob(filename)
         if blob:
-            ext = current_app.extensions["flask-google-storage"]["ext_obj"]
+            ext = get_state(current_app)["ext_obj"]
             return blob.generate_signed_url(timedelta(**ext.signed_url_config))
         else:
             return self.url(filename)
 
     def path(self, filename: str, folder: str = None) -> Path:
         """
-        This returns the absolute path of a file uploaded to this set. It
-        doesn't actually check whether said file exists.
+        This returns the absolute path of a file uploaded to this set. It doesn't actually check
+        whether said file exists.
 
         :param filename: The filename to return the path for.
         :param folder: The subfolder within the upload set previously used to save to.
@@ -107,10 +127,9 @@ class UploadSet:
 
     def file_allowed(self, storage: FileStorage, basename: PurePath) -> bool:
         """
-        This tells whether a file is allowed. It should return `True` if the
-        given `werkzeug.FileStorage` object can be saved with the given
-        basename, and `False` if it can't. The default implementation just
-        checks the extension, so you can override this if you want.
+        This tells whether a file is allowed. It should return `True` if the given
+        `werkzeug.FileStorage` object can be saved with the given basename, and `False` if it can't.
+        The default implementation just checks the extension, so you can override this if you want.
 
         :param storage: The `werkzeug.FileStorage` to check.
         :param basename: The basename it will be saved under.
@@ -119,9 +138,8 @@ class UploadSet:
 
     def extension_allowed(self, ext: str) -> bool:
         """
-        This determines whether a specific extension is allowed. It is called
-        by `file_allowed`, so if you override that but still want to check
-        extensions, call back into this.
+        This determines whether a specific extension is allowed. It is called by `file_allowed`, so
+        if you override that but still want to check extensions, call back into this.
 
         :param ext: The extension to check, without the dot.
         """
@@ -144,21 +162,20 @@ class UploadSet:
         resolve_conflict: bool = False,
     ) -> PurePath:
         """
-        This saves a `werkzeug.FileStorage` into this upload set. If the
-        upload is not allowed, an `NotAllowedUploadError` error will be raised.
-        Otherwise, the file will be saved and its name (including the folder)
-        will be returned.
+        This saves a `werkzeug.FileStorage` into this upload set. If the upload is not allowed, an
+        `NotAllowedUploadError` error will be raised. Otherwise, the file will be saved and its name
+        (including the folder) will be returned. If the `UploadSet` has a configured
+        `google.cloud.storage.bucket`` this file will be uploaded to that bucket as well.
 
-        :param storage: The uploaded file to save.
-        :param folder: The subfolder within the upload set to save to.
-        :param name: The name to save the file as. If it ends with a dot, the
-                     file's extension will be appended to the end. (If you
-                     are using `name`, you can include the folder in the
-                     `name` instead of explicitly using `folder`, i.e.
-                     ``uset.save(file, name="someguy/photo_123.")``
+        :param storage: The uploaded file to save. :param folder: The subfolder within the upload
+                        set to save to.
+        :param name: The name to save the file as. If it ends with a dot, the file's extension will
+                     be appended to the end. (If you are using `name`, you can include the folder in
+                     the `name` instead of explicitly using `folder`, i.e. ``uset.save(file,
+                     name="someguy/photo_123.")``
         :param public: Whether to mark the file as public in the bucket.
         :param keep_local: Whether to keep local file after uploading to the bucket.
-        :param resolve_conflict: Whether to resolve name conflict or simply overwrite
+        :param resolve_conflict: Whether to resolve name conflict or simply overwrite.
         """
         if not isinstance(storage, FileStorage):
             raise TypeError("The given storage must be a werkzeug.FileStorage instance")
@@ -188,11 +205,11 @@ class UploadSet:
         storage.save(filepath)
         fullname = PurePath(folder, basename) if folder else PurePath(basename)
 
-        cfg = self.config
-        if cfg.bucket:
+        bucket = self.config.bucket
+        if bucket:
             fullpath = self.path(fullname)
             blob_name = fullname if name else f"{uuid.uuid4()}{basename.suffix}"
-            blob = cfg.bucket.blob(str(blob_name))
+            blob = bucket.blob(str(blob_name))
             fullname = PurePath(blob.name)
 
             try:
@@ -209,13 +226,10 @@ class UploadSet:
 
     def resolve_conflict(self, root: Path, basename: PurePath) -> PurePath:
         """
-        If a file with the selected name already exists in the target folder,
-        this method is called to resolve the conflict. It should return a new
-        basename for the file.
-
-        The default implementation splits the name and extension and adds a
-        suffix to the name consisting of an underscore and a number, and tries
-        that until it finds one that doesn't exist.
+        If a file with the selected name already exists in the target folder, this method may be
+        called to resolve the conflict. It should return a new basename for the file. Default
+        implementation splits the name and extension and adds a suffix to the name consisting of an
+        underscore and a number, and tries that until it finds one that doesn't exist.
 
         :param target_folder: The absolute path to the target.
         :param basename: The file's original basename.
@@ -229,6 +243,11 @@ class UploadSet:
                 return new_name
 
     def delete(self, filename: str):
+        """
+        Deletes either the corresponding `google.cloud.storage.Blob` object or the local file.
+
+        :param filename: The file name to be deleted.
+        """
         blob = self.blob(filename)
         if blob:
             blob.delete()
