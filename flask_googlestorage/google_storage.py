@@ -55,8 +55,8 @@ class GoogleStorage:
                 base_url = self._default_base_url(uset)
 
         bucket = None
-        if self.client:
-            bucket_name = cfg.get(prefix + "BUCKET")
+        bucket_name = cfg.get(prefix + "BUCKET")
+        if self.client and bucket_name:
             try:
                 bucket = self.client.get_bucket(bucket_name)
             except cloud.exceptions.NotFound:
