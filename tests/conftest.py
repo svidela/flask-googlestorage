@@ -1,5 +1,4 @@
 import io
-import os
 import pathlib
 from unittest import mock
 
@@ -24,113 +23,28 @@ def app():
 
 
 @pytest.fixture
-def app_defaults(app):
-    app.config.update(
-        {"UPLOADS_DEFAULT_DEST": "/var/uploads", "UPLOADS_DEFAULT_URL": "http://localhost:6000/"}
-    )
+def app_init(app):
+    app.config.update({"UPLOADS_DEST": "/var/uploads"})
 
     files, photos = UploadSet("files"), UploadSet("photos")
 
     storage = GoogleStorage(files, photos)
     storage.init_app(app)
-
-    return app
-
-
-@pytest.fixture
-def app_default_serve(app):
-    app.config.update({"UPLOADS_DEFAULT_DEST": "/var/uploads"})
-
-    files, photos = UploadSet("files"), UploadSet("photos")
-
-    storage = GoogleStorage(files, photos)
-    storage.init_app(app)
-
-    return app
-
-
-@pytest.fixture
-def app_mixed_defaults(app):
-    app.config.update(
-        {
-            "UPLOADS_DEFAULT_DEST": "/var/uploads",
-            "UPLOADS_DEFAULT_URL": "http://localhost:6001/",
-            "UPLOADED_PHOTOS_DEST": "/mnt/photos",
-            "UPLOADED_PHOTOS_URL": "http://localhost:6002/",
-        }
-    )
-
-    files, photos = UploadSet("files"), UploadSet("photos")
-
-    storage = GoogleStorage(files, photos)
-    storage.init_app(app)
-
-    return app
-
-
-@pytest.fixture
-def app_callable_default_dest(app):
-    app.config.update(
-        {
-            "CUSTOM": "/custom/path",
-            "UPLOADED_PHOTOS_DEST": "/mnt/photos",
-            "UPLOADED_PHOTOS_URL": "http://localhost:6002/",
-        }
-    )
-
-    files = UploadSet("files", default_dest=lambda app: os.path.join(app.config["CUSTOM"], "files"))
-    photos = UploadSet("photos")
-
-    storage = GoogleStorage(files, photos)
-    storage.init_app(app)
-
-    return app
-
-
-@pytest.fixture
-def app_manual(app):
-    app.config.update(
-        {
-            "UPLOADED_FILES_DEST": "/var/files",
-            "UPLOADED_FILES_URL": "http://localhost:6001/",
-            "UPLOADED_PHOTOS_DEST": "/mnt/photos",
-            "UPLOADED_PHOTOS_URL": "http://localhost:6002/",
-        }
-    )
-
-    files, photos = UploadSet("files"), UploadSet("photos")
-
-    storage = GoogleStorage(files, photos)
-    storage.init_app(app)
-
-    return app
-
-
-@pytest.fixture
-def app_serve(app):
-    app.config.update({"UPLOADED_FILES_DEST": "/var/files", "UPLOADED_PHOTOS_DEST": "/mnt/photos"})
-
-    files, photos = UploadSet("files"), UploadSet("photos")
-
-    GoogleStorage(files, photos, app=app)
 
     return app
 
 
 @pytest.fixture
 def app_tmp(app, tmpdir):
-    app.config.update({"UPLOADED_FILES_DEST": str(tmpdir)})
-
-    foo = pathlib.Path(tmpdir) / "foo.txt"
-    foo.write_text("Foo content")
-
-    bar = pathlib.Path(tmpdir) / "bar.txt"
-    bar.write_text("Bar content")
+    app.config.update({"UPLOADS_DEST": str(tmpdir)})
 
     files = UploadSet("files")
 
     storage = GoogleStorage(files)
     storage.init_app(app)
+
+    files.save(FileStorage(stream=io.BytesIO(b"Foo content"), filename="foo.txt"))
+    files.save(FileStorage(stream=io.BytesIO(b"Bar content"), filename="bar.txt"))
 
     return app
 
@@ -148,7 +62,7 @@ def file_storage_cls():
 def tmp_uploadset(tmpdir):
     dst = str(tmpdir)
     upload_set = UploadSet("files")
-    upload_set._config = UploadConfiguration(pathlib.Path(dst))
+    upload_set.config = UploadConfiguration(pathlib.Path(dst))
 
     return upload_set
 
@@ -196,7 +110,7 @@ def google_storage_mock(google_bucket_mock):
 def bucket_uploadset(google_bucket_mock, tmpdir):
     dst = pathlib.Path(tmpdir)
     upload_set = UploadSet("files")
-    upload_set._config = UploadConfiguration(dst, bucket=google_bucket_mock)
+    upload_set.config = UploadConfiguration(dst, bucket=google_bucket_mock)
 
     return upload_set
 
@@ -205,7 +119,7 @@ def bucket_uploadset(google_bucket_mock, tmpdir):
 def app_cloud(google_storage_mock, app):
     app.config.update(
         {
-            "UPLOADS_DEFAULT_DEST": "/var/uploads",
+            "UPLOADS_DEST": "/var/uploads",
             "UPLOADED_FILES_BUCKET": "files-bucket",
             "UPLOADED_PHOTOS_BUCKET": "photos-bucket",
         }

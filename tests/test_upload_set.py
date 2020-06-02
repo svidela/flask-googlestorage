@@ -6,11 +6,7 @@ from flask import url_for
 from flask_googlestorage import UploadSet
 from flask_googlestorage.upload_configuration import UploadConfiguration
 from flask_googlestorage.extensions import ALL
-from flask_googlestorage.exceptions import (
-    NotInitializedStorageError,
-    NotFoundUploadSetError,
-    NotAllowedUploadError,
-)
+from flask_googlestorage.exceptions import NotFoundUploadSetError, NotAllowedUploadError
 
 
 def test_name_alnum():
@@ -18,6 +14,14 @@ def test_name_alnum():
         UploadSet("my_files")
 
     assert str(e_info.value) == "Name must be alphanumeric (no underscores)"
+
+
+def test_set_config_error():
+    uset = UploadSet("files")
+    with pytest.raises(TypeError) as e_info:
+        uset.config = "Not valid"
+
+    assert str(e_info.value) == "You must pass an 'UploadConfiguration' object"
 
 
 def test_config_runtime_error():
@@ -29,14 +33,17 @@ def test_config_runtime_error():
 
 
 def test_config_not_init_error(app):
-    with pytest.raises(NotInitializedStorageError) as e_info:
+    with pytest.raises(AssertionError) as e_info:
         uset = UploadSet("files")
         uset.config
 
-    assert str(e_info.value) == "Flask-GoogleStorage extension was not initialized"
+    assert str(e_info.value) == (
+        "The google-storage extension was not registered to the current "
+        "application. Please make sure to call init_app() first."
+    )
 
 
-def test_config_not_found_error(app_defaults):
+def test_config_not_found_error(app_init):
     with pytest.raises(NotFoundUploadSetError) as e_info:
         uset = UploadSet("music")
         uset.config
@@ -83,7 +90,7 @@ def test_save_not_allowed(file_storage_cls, tmp_uploadset):
 def test_secured_filename(filename, expected, file_storage_cls, tmpdir):
     dst = pathlib.Path(tmpdir)
     uset = UploadSet("files", ALL)
-    uset._config = UploadConfiguration(dst)
+    uset.config = UploadConfiguration(dst)
     tfs = file_storage_cls(filename=filename)
     res = uset.save(tfs)
     assert res.name == expected
@@ -107,21 +114,12 @@ def test_path(filename, folder, tmp_uploadset):
     assert tmp_uploadset.path(filename, folder=folder) == dst / pathlib.PurePath(*parts)
 
 
-def test_url_generated(app_serve):
+def test_url_generated(app_init):
     uset = UploadSet("files")
-    with app_serve.test_request_context():
+    with app_init.test_request_context():
         url = uset.url("foo.txt")
         gen = url_for("_uploads.download_file", name="files", filename="foo.txt", _external=True)
         assert url == gen
-
-
-def test_url_based(app_manual):
-    uset = UploadSet("files")
-    with app_manual.test_request_context():
-        url = uset.url("foo.txt")
-        assert url == "http://localhost:6001/foo.txt"
-
-    assert "_uploads" not in app_manual.blueprints
 
 
 @pytest.mark.parametrize("resolve, expected", [(True, "foo_1.txt"), (False, "foo.txt")])
@@ -203,7 +201,7 @@ def test_save_public_google_storage(public, google_bucket_mock, empty_txt, bucke
 def test_delete_local(file_storage_cls, tmpdir):
     dst = pathlib.Path(tmpdir)
     upload_set = UploadSet("files")
-    upload_set._config = UploadConfiguration(dst)
+    upload_set.config = UploadConfiguration(dst)
 
     foo = dst / "foo.txt"
     foo.touch()
@@ -228,18 +226,9 @@ def test_signed_url_google_storage(app_cloud):
     uset.signed_url("foo.txt") == "http://google-storage-signed-url/"
 
 
-def test_signed_url_generated_fallback(app_serve):
+def test_signed_url_generated_fallback(app_init):
     uset = UploadSet("files")
-    with app_serve.test_request_context():
+    with app_init.test_request_context():
         url = uset.signed_url("foo.txt")
         gen = url_for("_uploads.download_file", name="files", filename="foo.txt", _external=True)
         assert url == gen
-
-
-def test_sigend_url_based_fallback(app_manual):
-    uset = UploadSet("files")
-    with app_manual.test_request_context():
-        url = uset.signed_url("foo.txt")
-        assert url == "http://localhost:6001/foo.txt"
-
-    assert "_uploads" not in app_manual.blueprints
