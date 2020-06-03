@@ -4,7 +4,8 @@ import pytest
 from flask import url_for
 from google.cloud.exceptions import GoogleCloudError
 
-from flask_googlestorage.buckets import LocalBucket, Bucket
+from flask_googlestorage import GoogleStorage, Bucket
+from flask_googlestorage.buckets import LocalBucket
 from flask_googlestorage.extensions import ALL
 from flask_googlestorage.exceptions import NotFoundBucketError, NotAllowedUploadError
 
@@ -282,3 +283,18 @@ def test_get_file_keeped(url, app_cloud):
     with app_cloud.test_client() as client:
         rv = client.get(url)
         assert rv.status_code == 404
+
+
+def test_storage_mocking(app, local_bucket):
+    app.config.update({"GOOGLE_STORAGE_LOCAL_DEST": "/var/uploads"})
+
+    files = Bucket("files")
+
+    storage = GoogleStorage(files)
+    storage.init_app(app)
+
+    assert files.storage.destination == pathlib.Path("/var/uploads/files")
+    with files.storage_ctx(local_bucket):
+        assert files.storage is local_bucket
+
+    assert files.storage.destination == pathlib.Path("/var/uploads/files")
