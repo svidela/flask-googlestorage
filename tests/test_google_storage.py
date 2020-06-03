@@ -2,28 +2,33 @@ from pathlib import Path
 
 import pytest
 
-from flask_googlestorage import GoogleStorage, UploadSet
+from flask_googlestorage import GoogleStorage, Bucket
+from flask_googlestorage.buckets import LocalBucket, CloudBucket
 from flask_googlestorage.exceptions import NotFoundDestinationError
+from flask_googlestorage.extensions import DEFAULTS
 from flask_googlestorage.utils import get_state
-from flask_googlestorage.upload_configuration import UploadConfiguration
 
 
 def test_missing_conf(app):
-    files = UploadSet("files")
-
+    files = Bucket("files")
     with pytest.raises(NotFoundDestinationError) as e_info:
         GoogleStorage(files, app=app)
 
-    assert str(e_info.value) == "You must set the 'UPLOADS_DEST' configuration variable"
+    assert (
+        str(e_info.value) == "You must set the 'GOOGLE_STORAGE_LOCAL_DEST' configuration variable"
+    )
 
 
 def test_defaults(app_init):
-    storage_config = get_state(app_init)["config"]
-    assert storage_config["files"] == UploadConfiguration(Path("/var/uploads/files"))
-    assert storage_config["photos"] == UploadConfiguration(Path("/var/uploads/photos"))
+    storage_config = get_state(app_init)["buckets"]
+    assert storage_config["files"].destination == Path("/var/uploads/files")
+    assert storage_config["photos"].destination == Path("/var/uploads/photos")
+
+    assert storage_config["files"].extensions == DEFAULTS
+    assert storage_config["photos"].extensions == DEFAULTS
 
 
 def test_google_cloud_storage(app_cloud):
-    storage_config = get_state(app_cloud)["config"]
-    assert storage_config["files"].bucket
-    assert storage_config["photos"].bucket is None
+    storage_config = get_state(app_cloud)["buckets"]
+    assert isinstance(storage_config["files"], CloudBucket)
+    assert isinstance(storage_config["photos"], LocalBucket)
