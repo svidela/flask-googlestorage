@@ -181,10 +181,10 @@ def app_cloud_retry(google_storage_error_mock, app, tmpdir):
     app.config.update(
         {
             "GOOGLE_STORAGE_LOCAL_DEST": str(tmpdir),
-            "GOOGLE_STORAGE_RETRY": {"stop": stop_after_attempt(2)},
+            "GOOGLE_STORAGE_TENACITY": {"stop": stop_after_attempt(2)},
             "GOOGLE_STORAGE_FILES_BUCKET": "files-bucket",
             "GOOGLE_STORAGE_PHOTOS_BUCKET": "photos-bucket",
-            "GOOGLE_STORAGE_FILES_RETRY": {"stop": stop_after_attempt(4), "wait": wait_fixed(1)},
+            "GOOGLE_STORAGE_FILES_TENACITY": {"stop": stop_after_attempt(4), "wait": wait_fixed(1)},
         }
     )
 

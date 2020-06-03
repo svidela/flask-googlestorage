@@ -119,7 +119,7 @@ class CloudBucket:
         blob.md5_hash = base64.b64encode(md5_hash.digest()).decode()
 
         try:
-            if self._retry:
+            if self.tenacity:
                 retry(
                     reraise=True, retry=retry_if_exception_type(GoogleCloudError), **self.tenacity
                 )(lambda: blob.upload_from_filename(filename))()
