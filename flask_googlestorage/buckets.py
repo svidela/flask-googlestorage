@@ -133,16 +133,16 @@ class CloudBucket:
 
         blob_name = str(filename) if name else f"{uuid.uuid4()}{filename.suffix}"
         blob = self.bucket.blob(blob_name)
-
-        upload_fn = self._upload
-        if self._retry:
-            retry_wrap = retry(
-                reraise=True, retry=retry_if_exception_type(GoogleCloudError), **self._retry
-            )
-            upload_fn = retry_wrap(self._upload)
+        md5_hash = hashlib.md5(filepath.read_bytes())
+        blob.md5_hash = base64.b64encode(md5_hash.digest()).decode()
 
         try:
-            upload_fn(blob, filepath)
+            if self._retry:
+                retry(reraise=True, retry=retry_if_exception_type(GoogleCloudError), **self._retry)(
+                    lambda: blob.upload_from_filename(filename)
+                )()
+            else:
+                blob.upload_from_filename(filepath)
         finally:
             if self.delete_local:
                 filepath.unlink()
@@ -151,11 +151,6 @@ class CloudBucket:
             blob.make_public()
 
         return PurePath(blob.name)
-
-    def _upload(self, blob: storage.Blob, filepath: Path):
-        md5_hash = hashlib.md5(filepath.read_bytes())
-        blob.md5_hash = base64.b64encode(md5_hash.digest()).decode()
-        blob.upload_from_filename(filepath)
 
     def delete(self, filename: str):
         blob = self.get_blob(filename)
