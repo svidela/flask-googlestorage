@@ -14,7 +14,9 @@ def test_missing_conf(app):
     with pytest.raises(NotFoundDestinationError) as e_info:
         GoogleStorage(files, app=app)
 
-    assert str(e_info.value) == "You must set the 'UPLOADS_DEST' configuration variable"
+    assert (
+        str(e_info.value) == "You must set the 'GOOGLE_STORAGE_LOCAL_DEST' configuration variable"
+    )
 
 
 def test_defaults(app_init):

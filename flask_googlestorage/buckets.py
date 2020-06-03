@@ -6,6 +6,8 @@ from pathlib import PurePath, Path
 
 from flask import Blueprint, send_from_directory, current_app, url_for
 from google.cloud import storage
+from google.cloud.exceptions import GoogleCloudError
+from tenacity import retry, retry_if_exception_type
 from werkzeug.datastructures import FileStorage
 
 from .exceptions import NotFoundBucketError, NotAllowedUploadError
@@ -101,9 +103,13 @@ class CloudBucket:
         extensions: Tuple[str, ...] = DEFAULTS,
         resolve_conflicts: bool = False,
         delete_local: bool = True,
+        signed_url: dict = None,
+        retry: dict = None,
     ):
         self.bucket = bucket
         self.delete_local = delete_local
+        self._signed_url = signed_url if signed_url is not None else {}
+        self._retry = retry
         self.local = LocalBucket(
             name,
             destination,
@@ -119,7 +125,7 @@ class CloudBucket:
         return self.get_blob(filename).public_url
 
     def signed_url(self, filename: str) -> str:
-        return self.get_blob(filename).generate_signed_url()
+        return self.get_blob(filename).generate_signed_url(**self._signed_url)
 
     def save(self, storage: FileStorage, name: str = None, public: bool = False) -> PurePath:
         filename = self.local.save(storage, name=name)
@@ -128,19 +134,28 @@ class CloudBucket:
         blob_name = str(filename) if name else f"{uuid.uuid4()}{filename.suffix}"
         blob = self.bucket.blob(blob_name)
 
-        filename = PurePath(blob.name)
+        upload_fn = self._upload
+        if self._retry:
+            retry_wrap = retry(
+                reraise=True, retry=retry_if_exception_type(GoogleCloudError), **self._retry
+            )
+            upload_fn = retry_wrap(self._upload)
 
         try:
-            md5_hash = hashlib.md5(filepath.read_bytes())
-            blob.md5_hash = base64.b64encode(md5_hash.digest()).decode()
-            blob.upload_from_filename(filepath)  # it may raise GoogleCloudError
-            if public:
-                blob.make_public()
+            upload_fn(blob, filepath)
         finally:
             if self.delete_local:
                 filepath.unlink()
 
-        return filename
+        if public:
+            blob.make_public()
+
+        return PurePath(blob.name)
+
+    def _upload(self, blob: storage.Blob, filepath: Path):
+        md5_hash = hashlib.md5(filepath.read_bytes())
+        blob.md5_hash = base64.b64encode(md5_hash.digest()).decode()
+        blob.upload_from_filename(filepath)
 
     def delete(self, filename: str):
         blob = self.get_blob(filename)

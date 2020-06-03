@@ -2,6 +2,7 @@ import pathlib
 
 import pytest
 from flask import url_for
+from google.cloud.exceptions import GoogleCloudError
 
 from flask_googlestorage.buckets import LocalBucket, Bucket
 from flask_googlestorage.extensions import ALL
@@ -248,6 +249,23 @@ def test_bucket_save(name, app_cloud, tmpdir, empty_txt):
     bucket = Bucket(name)
     bucket.save(empty_txt)
     assert filepath.exists()
+
+
+@pytest.mark.parametrize("name", ("files", "photos"))
+def test_bucket_save_retry(name, app_cloud_retry, tmpdir, empty_txt, google_bucket_error_mock):
+    filepath = pathlib.Path(tmpdir) / name / "empty.txt"
+
+    assert not filepath.exists()
+
+    bucket = Bucket(name)
+    if name == "photos":
+        with pytest.raises(GoogleCloudError):
+            bucket.save(empty_txt)
+
+        assert google_bucket_error_mock.get_blob().upload_from_filename.call_count == 2
+    else:
+        bucket.save(empty_txt)
+        assert google_bucket_error_mock.get_blob().upload_from_filename.call_count == 3
 
 
 @pytest.mark.parametrize("file, content", [("foo.txt", "Foo content"), ("bar.txt", "Bar content")])
