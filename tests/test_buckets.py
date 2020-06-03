@@ -80,7 +80,7 @@ def test_save_not_allowed(file_storage_cls, local_bucket):
 )
 def test_secured_filename(filename, expected, file_storage_cls, tmpdir):
     dst = pathlib.Path(tmpdir)
-    bucket = LocalBucket("files", dst, extensions=ALL, register_blueprint=False)
+    bucket = LocalBucket("files", dst, extensions=ALL)
     tfs = file_storage_cls(filename=filename)
     res = bucket.save(tfs)
 
@@ -89,7 +89,7 @@ def test_secured_filename(filename, expected, file_storage_cls, tmpdir):
 
 
 def test_url_generated(app_init):
-    bucket = LocalBucket("files", None, register_blueprint=False)
+    bucket = LocalBucket("files", None)
     with app_init.test_request_context():
         url = bucket.url("foo.txt")
         gen = url_for("files_uploads.download_file", filename="foo.txt", _external=True)
@@ -125,13 +125,7 @@ def test_multi_conflict(resolve, expected, file_storage_cls, local_bucket):
 
 @pytest.mark.parametrize("resolve, expected", [(True, "foo_1"), (False, "foo")])
 def test_conflict_without_extension(resolve, expected, file_storage_cls, tmpdir):
-    bucket = LocalBucket(
-        "files",
-        pathlib.Path(tmpdir),
-        extensions=(""),
-        resolve_conflicts=resolve,
-        register_blueprint=False,
-    )
+    bucket = LocalBucket("files", pathlib.Path(tmpdir), extensions=(""), resolve_conflicts=resolve)
 
     tfs = file_storage_cls(filename="foo")
     (bucket.destination / "foo").touch()
@@ -157,7 +151,7 @@ def test_non_ascii_filename(file_storage_cls, local_bucket):
 
 def test_delete_local(file_storage_cls, tmpdir):
     dst = pathlib.Path(tmpdir)
-    bucket = LocalBucket("files", dst, register_blueprint=False)
+    bucket = LocalBucket("files", dst)
     foo = dst / "foo.txt"
     foo.touch()
     bucket.delete("foo.txt")
