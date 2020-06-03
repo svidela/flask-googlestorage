@@ -4,9 +4,9 @@ class NotFoundDestinationError(Exception):
     """
 
 
-class NotFoundUploadSetError(Exception):
+class NotFoundBucketError(Exception):
     """
-    This exception is raised is the user attempts to read an UploadSet config
+    This exception is raised is the user attempts to read a bucket config
     that was not configured in the current application context
     """
 

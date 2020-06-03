@@ -1,18 +1,16 @@
 from pathlib import Path
-from typing import Tuple
+from typing import Union, Tuple
 
 from flask import Flask
 from google import auth, cloud
 
-from .blueprint import bp
 from .exceptions import NotFoundDestinationError
-from .upload_set import UploadSet
-from .upload_configuration import UploadConfiguration
+from .buckets import LocalBucket, CloudBucket, Bucket
 
 
 class GoogleStorage:
-    def __init__(self, *upload_sets: Tuple[UploadSet, ...], app: Flask = None):
-        self.upload_sets = upload_sets
+    def __init__(self, *buckets: Tuple[Bucket, ...], app: Flask = None):
+        self.buckets = buckets
 
         if app is not None:
             self.init_app(app)
@@ -34,31 +32,42 @@ class GoogleStorage:
         app.extensions = getattr(app, "extensions", {})
         ext = app.extensions.setdefault("google-storage", {})
         ext["ext_obj"] = self
-        ext["config"] = {}
+        ext["buckets"] = {}
 
         self.signed_url_config = app.config.get("SIGNED_URL_EXPIRATION", {"minutes": 5})
 
-        for uset in self.upload_sets:
-            config = self._configure_upload_set(uploads_dest, uset)
-            ext["config"][uset.name] = config
+        for bucket in self.buckets:
+            ext["buckets"][bucket.name] = self._create_bucket(uploads_dest, bucket)
 
-        if any(s.bucket is None for s in ext["config"].values()):
-            app.register_blueprint(bp)
-
-    def _configure_upload_set(self, uploads_dest: Path, uset: UploadSet) -> UploadConfiguration:
+    def _create_bucket(self, uploads_dest: Path, bucket: Bucket) -> Union[LocalBucket, CloudBucket]:
         cfg = self._app.config
+        prefix = f"UPLOADED_{bucket.name.upper()}_"
 
-        prefix = f"UPLOADED_{uset.name.upper()}_"
+        destination = uploads_dest / bucket.name
+        allow = tuple(cfg.get(prefix + "ALLOW", ()))
+        deny = tuple(cfg.get(prefix + "DENY", ()))
+        extensions = tuple(ext for ext in bucket.extensions + allow if ext not in deny)
+        resolve_conflicts = cfg.get(prefix + "RESOLVE_CONFLICTS", False)
 
-        allow_extns = tuple(cfg.get(prefix + "ALLOW", ()))
-        deny_extns = tuple(cfg.get(prefix + "DENY", ()))
-
-        bucket = None
+        cloud_bucket = None
         bucket_name = cfg.get(prefix + "BUCKET")
         if self.client and bucket_name:
+            delete_local = cfg.get(prefix + "DELETE_LOCAL", True)
             try:
-                bucket = self.client.get_bucket(bucket_name)
-            except cloud.exceptions.NotFound:
-                self._app.logger.warning(f"Could not found the bucket for {uset.name}")
+                google_bucket = self.client.get_bucket(bucket_name)
+                cloud_bucket = CloudBucket(
+                    bucket.name,
+                    google_bucket,
+                    destination,
+                    extensions,
+                    resolve_conflicts,
+                    delete_local,
+                )
 
-        return UploadConfiguration(uploads_dest / uset.name, allow_extns, deny_extns, bucket)
+                return cloud_bucket
+            except cloud.exceptions.NotFound:
+                self._app.logger.warning(f"Could not found the bucket for {bucket.name}")
+
+        local_bucket = LocalBucket(bucket.name, destination, extensions, resolve_conflicts)
+
+        return local_bucket

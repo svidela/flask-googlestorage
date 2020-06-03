@@ -1,2 +1,2 @@
 from .google_storage import GoogleStorage  # noqa
-from .upload_set import UploadSet  # noqa
+from .buckets import Bucket  # noqa

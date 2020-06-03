@@ -7,8 +7,8 @@ from flask import Flask
 from google.cloud.exceptions import NotFound
 from werkzeug.datastructures import FileStorage
 
-from flask_googlestorage import UploadSet, GoogleStorage
-from flask_googlestorage.upload_configuration import UploadConfiguration
+from flask_googlestorage import GoogleStorage, Bucket
+from flask_googlestorage.buckets import LocalBucket, CloudBucket
 
 
 @pytest.fixture
@@ -26,7 +26,7 @@ def app():
 def app_init(app):
     app.config.update({"UPLOADS_DEST": "/var/uploads"})
 
-    files, photos = UploadSet("files"), UploadSet("photos")
+    files, photos = Bucket("files"), Bucket("photos")
 
     storage = GoogleStorage(files, photos)
     storage.init_app(app)
@@ -38,7 +38,7 @@ def app_init(app):
 def app_tmp(app, tmpdir):
     app.config.update({"UPLOADS_DEST": str(tmpdir)})
 
-    files = UploadSet("files")
+    files = Bucket("files")
 
     storage = GoogleStorage(files)
     storage.init_app(app)
@@ -59,12 +59,8 @@ def file_storage_cls():
 
 
 @pytest.fixture
-def tmp_uploadset(tmpdir):
-    dst = str(tmpdir)
-    upload_set = UploadSet("files")
-    upload_set.config = UploadConfiguration(pathlib.Path(dst))
-
-    return upload_set
+def local_bucket(tmpdir):
+    return LocalBucket("files", pathlib.Path(tmpdir), register_blueprint=False)
 
 
 @pytest.fixture
@@ -107,27 +103,48 @@ def google_storage_mock(google_bucket_mock):
 
 
 @pytest.fixture
-def bucket_uploadset(google_bucket_mock, tmpdir):
-    dst = pathlib.Path(tmpdir)
-    upload_set = UploadSet("files")
-    upload_set.config = UploadConfiguration(dst, bucket=google_bucket_mock)
-
-    return upload_set
+def cloud_bucket(google_bucket_mock, tmpdir):
+    return CloudBucket("files", google_bucket_mock, pathlib.Path(tmpdir))
 
 
 @pytest.fixture
-def app_cloud(google_storage_mock, app):
+def app_cloud(google_storage_mock, app, tmpdir):
     app.config.update(
         {
-            "UPLOADS_DEST": "/var/uploads",
+            "UPLOADS_DEST": str(tmpdir),
+            "UPLOADED_FILES_BUCKET": "files-bucket",
+            "UPLOADED_FILES_DELETE_LOCAL": False,
+            "UPLOADED_PHOTOS_BUCKET": "photos-bucket",
+        }
+    )
+
+    files, photos = Bucket("files"), Bucket("photos")
+
+    storage = GoogleStorage(files, photos)
+    storage.init_app(app)
+
+    files.save(FileStorage(stream=io.BytesIO(b"Foo content"), filename="foo.txt"))
+    photos.save(FileStorage(stream=io.BytesIO(b"Photo content"), filename="img.jpg"))
+
+    return app
+
+
+@pytest.fixture
+def app_cloud_default(google_storage_mock, app, tmpdir):
+    app.config.update(
+        {
+            "UPLOADS_DEST": str(tmpdir),
             "UPLOADED_FILES_BUCKET": "files-bucket",
             "UPLOADED_PHOTOS_BUCKET": "photos-bucket",
         }
     )
 
-    files, photos = UploadSet("files"), UploadSet("photos")
+    files, photos = Bucket("files"), Bucket("photos")
 
     storage = GoogleStorage(files, photos)
     storage.init_app(app)
+
+    files.save(FileStorage(stream=io.BytesIO(b"Foo content"), filename="foo.txt"))
+    photos.save(FileStorage(stream=io.BytesIO(b"Photo content"), filename="img.jpg"))
 
     return app
