@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import uuid
+from contextlib import contextmanager
 from typing import Union, Tuple
 from pathlib import PurePath, Path
 
@@ -151,8 +152,17 @@ class Bucket:
         self.extensions = extensions
         self._storage = None
 
+    @contextmanager
+    def storage_ctx(self, storage: Union[LocalBucket, CloudBucket]):
+        self._storage = storage
+        yield
+        self._storage = None
+
     @property
     def storage(self) -> Union[LocalBucket, CloudBucket]:
+        if self._storage:
+            return self._storage
+
         cfg = get_state(current_app)["buckets"]
         try:
             return cfg[self.name]
