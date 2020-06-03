@@ -39,8 +39,8 @@ class GoogleStorage:
 
         self._resolve_conflicts = app.config.get(f"{self._prefix}_RESOLVE_CONFLICTS", False)
         self._delete_local = app.config.get(f"{self._prefix}_DELETE_LOCAL", True)
-        self._signed_url = app.config.get(f"{self._prefix}_SIGNED_URL")
-        self._retry = app.config.get(f"{self._prefix}_RETRY")
+        self._signature = app.config.get(f"{self._prefix}_SIGNATURE")
+        self._tenacity = app.config.get(f"{self._prefix}_TENACITY")
 
         for bucket in self.buckets:
             ext["buckets"][bucket.name] = self._create_bucket(uploads_dest, bucket)
@@ -67,8 +67,8 @@ class GoogleStorage:
                     extensions=extensions,
                     resolve_conflicts=resolve_conflicts,
                     delete_local=delete_local,
-                    signed_url=cfg.get(f"{prefix}_SIGNED_URL", self._signed_url),
-                    retry=cfg.get(f"{prefix}_RETRY", self._retry),
+                    signature=cfg.get(f"{prefix}_SIGNATURE", self._signature),
+                    tenacity=cfg.get(f"{prefix}_TENACITY", self._tenacity),
                 )
                 if not delete_local:
                     self._register_blueprint(bucket.name, destination)

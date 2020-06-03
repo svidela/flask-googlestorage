@@ -89,13 +89,13 @@ class CloudBucket:
         extensions: Tuple[str, ...] = DEFAULTS,
         resolve_conflicts: bool = False,
         delete_local: bool = True,
-        signed_url: dict = None,
-        retry: dict = None,
+        signature: dict = None,
+        tenacity: dict = None,
     ):
         self.bucket = bucket
         self.delete_local = delete_local
-        self._signed_url = signed_url if signed_url is not None else {}
-        self._retry = retry
+        self.signature = signature or {}
+        self.tenacity = tenacity or {}
         self.local = LocalBucket(
             name, destination, extensions=extensions, resolve_conflicts=resolve_conflicts
         )
@@ -107,7 +107,7 @@ class CloudBucket:
         return self.get_blob(filename).public_url
 
     def signed_url(self, filename: str) -> str:
-        return self.get_blob(filename).generate_signed_url(**self._signed_url)
+        return self.get_blob(filename).generate_signed_url(**self.signature)
 
     def save(self, storage: FileStorage, name: str = None, public: bool = False) -> PurePath:
         filename = self.local.save(storage, name=name)
@@ -120,9 +120,9 @@ class CloudBucket:
 
         try:
             if self._retry:
-                retry(reraise=True, retry=retry_if_exception_type(GoogleCloudError), **self._retry)(
-                    lambda: blob.upload_from_filename(filename)
-                )()
+                retry(
+                    reraise=True, retry=retry_if_exception_type(GoogleCloudError), **self.tenacity
+                )(lambda: blob.upload_from_filename(filename))()
             else:
                 blob.upload_from_filename(filepath)
         finally:
