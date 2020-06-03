@@ -4,7 +4,7 @@ import uuid
 from typing import Union, Tuple
 from pathlib import PurePath, Path
 
-from flask import Blueprint, send_from_directory, current_app, url_for
+from flask import current_app, url_for
 from google.cloud import storage
 from google.cloud.exceptions import GoogleCloudError
 from tenacity import retry, retry_if_exception_type
@@ -22,15 +22,11 @@ class LocalBucket:
         destination: Path,
         extensions: Tuple[str, ...] = DEFAULTS,
         resolve_conflicts: bool = False,
-        register_blueprint: bool = True,
     ):
         self.name = name
         self.destination = destination
         self.extensions = extensions
         self.resolve_conflicts = resolve_conflicts
-
-        if register_blueprint:
-            self._register_blueprint()
 
     def root(self, folder: str = None) -> Path:
         return self.destination if folder is None else self.destination / folder
@@ -83,16 +79,6 @@ class LocalBucket:
         if filepath.is_file():
             filepath.unlink()
 
-    def _register_blueprint(self):
-        bp = Blueprint(f"{self.name}_uploads", self.name, url_prefix=f"/_uploads/{self.name}")
-        destination = self.destination
-
-        @bp.route("/<path:filename>")
-        def download_file(filename):
-            return send_from_directory(destination, filename)
-
-        current_app.register_blueprint(bp)
-
 
 class CloudBucket:
     def __init__(
@@ -111,11 +97,7 @@ class CloudBucket:
         self._signed_url = signed_url if signed_url is not None else {}
         self._retry = retry
         self.local = LocalBucket(
-            name,
-            destination,
-            extensions=extensions,
-            resolve_conflicts=resolve_conflicts,
-            register_blueprint=not delete_local,
+            name, destination, extensions=extensions, resolve_conflicts=resolve_conflicts
         )
 
     def get_blob(self, name):

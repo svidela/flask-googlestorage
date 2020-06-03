@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Union, Tuple
 
-from flask import Flask
+from flask import Flask, Blueprint, send_from_directory
 from google import auth, cloud
 
 from .exceptions import NotFoundDestinationError
@@ -58,6 +58,7 @@ class GoogleStorage:
         cloud_bucket = None
         bucket_name = cfg.get(f"{prefix}_BUCKET")
         if self._client and bucket_name:
+            delete_local = cfg.get(f"{prefix}_DELETE_LOCAL", self._delete_local)
             try:
                 cloud_bucket = CloudBucket(
                     bucket.name,
@@ -65,15 +66,27 @@ class GoogleStorage:
                     destination,
                     extensions=extensions,
                     resolve_conflicts=resolve_conflicts,
-                    delete_local=cfg.get(f"{prefix}_DELETE_LOCAL", self._delete_local),
+                    delete_local=delete_local,
                     signed_url=cfg.get(f"{prefix}_SIGNED_URL", self._signed_url),
                     retry=cfg.get(f"{prefix}_RETRY", self._retry),
                 )
+                if not delete_local:
+                    self._register_blueprint(bucket.name, destination)
 
                 return cloud_bucket
             except cloud.exceptions.NotFound:
                 self._app.logger.warning(f"Could not found the bucket for {bucket.name}")
 
         local_bucket = LocalBucket(bucket.name, destination, extensions, resolve_conflicts)
+        self._register_blueprint(bucket.name, destination)
 
         return local_bucket
+
+    def _register_blueprint(self, name, destination):
+        bp = Blueprint(f"{name}_uploads", name, url_prefix=f"/_uploads/{name}")
+
+        @bp.route("/<path:filename>")
+        def download_file(filename):
+            return send_from_directory(destination, filename)
+
+        self._app.register_blueprint(bp)

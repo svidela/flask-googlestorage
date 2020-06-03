@@ -61,7 +61,7 @@ def file_storage_cls():
 
 @pytest.fixture
 def local_bucket(tmpdir):
-    return LocalBucket("files", pathlib.Path(tmpdir), register_blueprint=False)
+    return LocalBucket("files", pathlib.Path(tmpdir))
 
 
 @pytest.fixture
