@@ -70,6 +70,10 @@ html_context = {
         ProjectLink("Issue Tracker", "https://github.com/svidela/flask-googlestorage/issues/"),
     ]
 }
+html_sidebars = {
+    "index": ["project.html", "localtoc.html", "searchbox.html"],
+    "**": ["localtoc.html", "relations.html", "searchbox.html"],
+}
 html_title = f"Flask-GoogleStorage Documentation ({version})"
 html_show_sourcelink = False
 
