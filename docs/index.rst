@@ -1,9 +1,7 @@
 Welcome to Flask-GoogleStorage
 ==============================
 
-Release v\ |version|. (:ref:`Changelog <changelog>`)
-
-**Flask-GoogleStorage** is an extension for Flask adding storage capabilities using Google Cloud Storage.
+**Flask-GoogleStorage** is a Flask extension for adding storage capabilities using Google Cloud Storage.
 
 Install
 =======
