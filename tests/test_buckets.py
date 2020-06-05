@@ -189,7 +189,7 @@ def test_delete_google_storage(cloud_bucket, google_bucket_mock):
     "name, url",
     [
         ("files", "http://google-storage-url/"),
-        ("photos", "http://localhost/photos_uploads/foo.txt"),
+        ("photos", "http://localhost/_uploads/photos/foo.txt"),
     ],
 )
 def test_bucket_url(name, url, app_cloud):
