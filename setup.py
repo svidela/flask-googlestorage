@@ -24,7 +24,7 @@ setup(
     description="Flexible and efficient upload to google cloud storage for Flask",
     long_description=__doc__,
     packages=find_packages(exclude=["tests*"]),
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     platforms="any",
     install_requires=["flask>=1.1.0", "google-cloud-storage>=1.28.1", "tenacity>=6.2.0"],
     classifiers=[
