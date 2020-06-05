@@ -17,6 +17,21 @@ from .utils import get_state, secure_filename_ext
 
 
 class LocalBucket:
+    """
+    This class represents a local bucket and is mainly used for temporary storage before uploading
+    to Google Cloud Storage. However, if the authentication with Google Cloud Storage fails or the
+    bucket id is not found, this class provides local storage. This is particularly useful in
+    development.
+
+    :param name: The name for this bucket.
+
+    :param destination: The absolute path to use for local storage.
+
+    :param extensions: A tuple of allowed extensions.
+
+    :param resolve_conflicts: Whether to resolve name conflicts or not.
+    """
+
     def __init__(
         self,
         name: str,
@@ -30,17 +45,50 @@ class LocalBucket:
         self.resolve_conflicts = resolve_conflicts
 
     def root(self, folder: str = None) -> Path:
+        """
+        Returns the root path for this local bucket
+
+        :param folder: A folder name to be added in the path
+
+        :returns: The :py:class:`pathlib.Path` object
+        """
         return self.destination if folder is None else self.destination / folder
 
     def url(self, filename: str) -> str:
+        """
+        Returns the url served by the :py:class:`flask.Flask` application
+
+        :param filename: The filename to be downloaded from the bucket
+        """
         return url_for(f"{self.name}_uploads.download_file", filename=filename, _external=True)
 
     signed_url = url
 
     def file_allowed(self, storage: FileStorage, basename: PurePath) -> bool:
+        """
+        Returns wheter the given file is allowed in this bucket
+
+        :param storage: the file being saved.
+
+        :param basename: the secured name of the file being saved
+
+        :returns: `True` if the extension is allowed and `False` otherwise.
+        """
         return basename.suffix[1:] in self.extensions
 
     def save(self, storage: FileStorage, name: str = None, **kwargs) -> PurePath:
+        """
+        Save the given file in this bucket and returns its relative path
+
+        :param storage: The file to be saved.
+
+        :param name: The name to be used instead of
+                     :py:attr:`werkzeug.datastructures.FileStorage.filename`. If it ends with a dot
+                     `.` the inferred extension will be added. Note that a folder can be included in
+                     the name, e.g., ``"foo/bar.txt"``
+
+        :returns: The :py:class:`pathlib.PurePath` relative to this bucket where the file was saved
+        """
         if not isinstance(storage, FileStorage):
             raise TypeError("The given storage must be a werkzeug.FileStorage instance")
 
@@ -76,6 +124,11 @@ class LocalBucket:
         return PurePath(folder, basename) if folder else PurePath(basename)
 
     def delete(self, filename: str):
+        """
+        Delete the file with the given filename if it exists.
+
+        :param filename: The name of the file to be deleted.
+        """
         filepath = self.root() / filename
         if filepath.is_file():
             filepath.unlink()
@@ -101,7 +154,7 @@ class CloudBucket:
             name, destination, extensions=extensions, resolve_conflicts=resolve_conflicts
         )
 
-    def get_blob(self, name):
+    def get_blob(self, name: str) -> storage.Blob:
         return self.bucket.get_blob(name)
 
     def url(self, filename: str) -> str:

@@ -16,10 +16,13 @@ Flask-GoogleStorage requires Python >= 3.6.
 Usage
 =====
 
-In order to authenticate with Google Cloud Storage, set the ``GOOGLE_APPLICATION_CREDENTIALS`` environment variable 
-to the full path to your service account private key file (see `google-auth`_ for more details). 
-Otherwise, **Flask-GoogleStorage** will storage and serve uploaded files locally and relative to the configuration variable
-``GOOGLE_STORAGE_LOCAL_DEST``.
+In order to authenticate with Google Cloud Storage, set the ``GOOGLE_APPLICATION_CREDENTIALS``
+environment variable to the full path to your service account private key file (see `google-auth`_
+documentation for more details). If the authentication fails, **Flask-GoogleStorage** will storage
+and serve uploaded files locally and relative to the configuration variable
+``GOOGLE_STORAGE_LOCAL_DEST``. Note that this configuration variable is required even in the case of
+successfull authentication as **Flask-GoogleStorage** will use such destination as a temporary
+storage.
 
 First create your app as usual:
 
@@ -93,7 +96,8 @@ A list of configuration keys currently understood by the extension:
                                        saved and served locally.
 ====================================== =========================================
 
-To restrict uploaded files content length use may want to use `Flask` configuration variable ``MAX_CONTENT_LENGTH``.
+To restrict uploaded files content length use may want to use `Flask` configuration variable
+``MAX_CONTENT_LENGTH``.
 
 
 API Reference
