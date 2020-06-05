@@ -179,4 +179,4 @@ class Bucket:
         return self.storage.url(filename)
 
     def signed_url(self, filename: str) -> str:
-        self.storage.signed_url(filename)
+        return self.storage.signed_url(filename)

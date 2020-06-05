@@ -195,20 +195,20 @@ def test_delete_google_storage(cloud_bucket, google_bucket_mock):
 def test_bucket_url(name, url, app_cloud):
     bucket = Bucket(name)
     with app_cloud.test_request_context():
-        bucket.url("foo.txt") == url
+        assert bucket.url("foo.txt") == url
 
 
 @pytest.mark.parametrize(
     "name, url",
     [
         ("files", "http://google-storage-signed-url/"),
-        ("photos", "http://localhost/photos_uploads/foo.txt"),
+        ("photos", "http://localhost/_uploads/photos/foo.txt"),
     ],
 )
 def test_bucket_signed_url(name, url, app_cloud):
     bucket = Bucket(name)
     with app_cloud.test_request_context():
-        bucket.signed_url("foo.txt") == url
+        assert bucket.signed_url("foo.txt") == url
 
 
 @pytest.mark.parametrize(
