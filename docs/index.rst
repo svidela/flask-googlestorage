@@ -96,8 +96,8 @@ A list of configuration keys currently understood by the extension:
                                        saved and served locally.
 ====================================== =========================================
 
-To restrict uploaded files content length use may want to use `Flask` configuration variable
-``MAX_CONTENT_LENGTH``.
+To restrict uploaded files content length you should use the `Flask` configuration variable
+``MAX_CONTENT_LENGTH``. See the `Configuration Handling`_ section in `Flask` documentation for more details.
 
 
 API Reference
@@ -117,6 +117,9 @@ Project Info
     changelog
     license
     authors
+
+.. _Configuration Handling:
+    https://flask.palletsprojects.com/en/1.1.x/config/#configuration-handling
 
 .. _google-auth: 
     https://google-auth.readthedocs.io
