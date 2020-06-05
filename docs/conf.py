@@ -4,8 +4,7 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-from pallets_sphinx_themes import get_version
-from pallets_sphinx_themes import ProjectLink
+from collections import OrderedDict
 
 # -- Path setup --------------------------------------------------------------
 
@@ -20,10 +19,12 @@ from pallets_sphinx_themes import ProjectLink
 
 # -- Project information -----------------------------------------------------
 
+import flask_googlestorage
+
 project = "Flask-GoogleStorage"
 copyright = "2020, Santiago Videla"
 author = "Santiago Videla"
-release, version = get_version("Flask-GoogleStorage")
+version = release = flask_googlestorage.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -34,7 +35,6 @@ release, version = get_version("Flask-GoogleStorage")
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
-    "pallets_sphinx_themes",
     "sphinx_issues",
 ]
 
@@ -59,16 +59,25 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "flask"
-html_context = {
-    "project_links": [
-        ProjectLink("Flask Website", "https://palletsprojects.com/p/flask/"),
-        ProjectLink("PyPI releases", "https://pypi.org/project/Flask-GoogleStorage/"),
-        ProjectLink("Source Code", "https://github.com/svidela/flask-googlestorage"),
-        ProjectLink("Issue Tracker", "https://github.com/svidela/flask-googlestorage/issues/"),
-    ]
+html_theme = "alabaster"
+
+html_theme_options = {
+    "description": "Google Cloud Storage for Flask",
+    "description_font_style": "italic",
+    "github_user": "svidela",
+    "github_repo": "flask-googlestorage",
+    "github_button": False,
+    "github_banner": True,
+    "codecov_button": True,
+    "sidebar_width": "240px",
+    "code_font_size": "0.8em",
+    "extra_nav_links": OrderedDict(
+        [
+            ("flask-googlestorage@PyPI", "http://pypi.python.org/pypi/flask-googlestorage"),
+            ("flask-googlestorage@GitHub", "http://github.com/svidela/flask-googlestorage"),
+        ]
+    ),
 }
-html_title = f"Flask-GoogleStorage Documentation ({version})"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
