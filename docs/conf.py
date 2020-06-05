@@ -4,7 +4,8 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-from collections import OrderedDict
+from pallets_sphinx_themes import get_version
+from pallets_sphinx_themes import ProjectLink
 
 # -- Path setup --------------------------------------------------------------
 
@@ -19,15 +20,14 @@ from collections import OrderedDict
 
 # -- Project information -----------------------------------------------------
 
-import flask_googlestorage
-
 project = "Flask-GoogleStorage"
 copyright = "2020, Santiago Videla"
 author = "Santiago Videla"
-version = release = flask_googlestorage.__version__
+release, version = get_version("Flask-GoogleStorage")
 
 
 # -- General configuration ---------------------------------------------------
+master_doc = "index"
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -35,6 +35,7 @@ version = release = flask_googlestorage.__version__
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
+    "pallets_sphinx_themes",
     "sphinx_issues",
 ]
 
@@ -59,25 +60,22 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "alabaster"
-
-html_theme_options = {
-    "description": "Google Cloud Storage for Flask",
-    "description_font_style": "italic",
-    "github_user": "svidela",
-    "github_repo": "flask-googlestorage",
-    "github_button": False,
-    "github_banner": True,
-    "codecov_button": True,
-    "sidebar_width": "240px",
-    "code_font_size": "0.8em",
-    "extra_nav_links": OrderedDict(
-        [
-            ("flask-googlestorage@PyPI", "http://pypi.python.org/pypi/flask-googlestorage"),
-            ("flask-googlestorage@GitHub", "http://github.com/svidela/flask-googlestorage"),
-        ]
-    ),
+html_theme = "flask"
+html_theme_options = {"index_sidebar_logo": False}
+html_context = {
+    "project_links": [
+        ProjectLink("Flask Website", "https://palletsprojects.com/p/flask/"),
+        ProjectLink("PyPI releases", "https://pypi.org/project/Flask-GoogleStorage/"),
+        ProjectLink("Source Code", "https://github.com/svidela/flask-googlestorage/"),
+        ProjectLink("Issue Tracker", "https://github.com/svidela/flask-googlestorage/issues/"),
+    ]
 }
+html_sidebars = {
+    "index": ["project.html", "localtoc.html", "searchbox.html"],
+    "**": ["localtoc.html", "relations.html", "searchbox.html"],
+}
+html_title = f"Flask-GoogleStorage Documentation ({version})"
+html_show_sourcelink = False
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
