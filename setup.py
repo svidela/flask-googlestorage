@@ -11,7 +11,7 @@ Links
 
 
 """
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 setup(
@@ -23,8 +23,8 @@ setup(
     author_email="santiago.videla@gmail.com",
     description="Flexible and efficient upload to google cloud storage for Flask",
     long_description=__doc__,
-    py_modules=["flask_googlestorage"],
-    zip_safe=False,
+    packages=find_packages(exclude=["tests*"]),
+    python_requires=">=3.5",
     platforms="any",
     install_requires=["flask>=1.1.0", "google-cloud-storage>=1.28.1", "tenacity>=6.2.0"],
     classifiers=[
