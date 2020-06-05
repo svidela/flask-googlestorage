@@ -74,9 +74,9 @@ A list of configuration keys currently understood by the extension:
 
 ====================================== =========================================
 ``GOOGLE_STORAGE_LOCAL_DEST``          Local path for either temporary or local storage.
-``GOOGLE_STORAGE_SIGNATURE``           A dictionary specifying the keywrod arguments
+``GOOGLE_STORAGE_SIGNATURE``           A dictionary specifying the keyword arguments
                                        for building the signed url.
-``GOOGLE_STORAGE_TENACITY``            A dictionary specifying the keywrod arguments
+``GOOGLE_STORAGE_TENACITY``            A dictionary specifying the keyword arguments
                                        for the :py:func:`tenacity.retry` decorator.
 ``GOOGLE_STORAGE_RESOLVE_CONFLICTS``   If set to `True`, **Flask-GoogleStorage** will
                                        resolve name conflicts. Otherwise, existing files will
