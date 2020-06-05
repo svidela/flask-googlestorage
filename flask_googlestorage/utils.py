@@ -9,11 +9,11 @@ def get_state(app: Flask) -> dict:
     Gets the state for the application
     """
 
-    assert "google-storage" in app.extensions, (
-        "The google-storage extension was not registered to the current "
+    assert "googlestorage" in app.extensions, (
+        "The googlestorage extension was not registered to the current "
         "application. Please make sure to call init_app() first."
     )
-    return app.extensions["google-storage"]
+    return app.extensions["googlestorage"]
 
 
 def secure_filename_ext(filename: str) -> PurePath:

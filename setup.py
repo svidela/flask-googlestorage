@@ -7,7 +7,7 @@ user can publish separately.
 
 Links
 `````
-* `development version <https://github.com/svidela/flask-google-storage>`_
+* `development version <https://github.com/svidela/flask-googlestorage>`_
 
 
 """
@@ -17,7 +17,7 @@ from setuptools import setup
 setup(
     name="Flask-GoogleStorage",
     version="0.1.0",
-    url="https://github.com/svidela/flask-google-storage",
+    url="https://github.com/svidela/flask-googlestorage",
     license="MIT",
     author="Santiago Videla",
     author_email="santiago.videla@gmail.com",

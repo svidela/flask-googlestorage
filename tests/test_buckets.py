@@ -31,7 +31,7 @@ def test_config_not_init_error(app):
         bucket.storage
 
     assert str(e_info.value) == (
-        "The google-storage extension was not registered to the current "
+        "The googlestorage extension was not registered to the current "
         "application. Please make sure to call init_app() first."
     )
 

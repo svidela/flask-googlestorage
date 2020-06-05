@@ -33,7 +33,7 @@ class GoogleStorage:
             self._client = None
 
         app.extensions = getattr(app, "extensions", {})
-        ext = app.extensions.setdefault("google-storage", {})
+        ext = app.extensions.setdefault("googlestorage", {})
         ext["ext_obj"] = self
         ext["buckets"] = {}
 
