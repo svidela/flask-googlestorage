@@ -89,7 +89,8 @@ A list of configuration keys currently understood by the extension:
 ``GOOGLE_STORAGE_X_DELETE_LOCAL``      Overwrite ``GOOGLE_STORAGE_DELETE_LOCAL`` for bucket ``X``.
 ``GOOGLE_STORAGE_X_ALLOW``             Tuple of allowed extensions for bucket ``X``.
 ``GOOGLE_STORAGE_X_DENY``              Tuple of denyed extensions for bucket ``X``.
-``GOOGLE_STORAGE_X_BUCKET``            Bucket id for bucket ``X``.
+``GOOGLE_STORAGE_X_BUCKET``            Bucket id for bucket ``X``. If the bucket is not found, files will be
+                                       saved and served locally.
 ====================================== =========================================
 
 To restrict uploaded files content length use may want to use `Flask` configuration variable ``MAX_CONTENT_LENGTH``.
