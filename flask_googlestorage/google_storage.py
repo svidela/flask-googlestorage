@@ -62,7 +62,8 @@ class GoogleStorage:
         destination = uploads_dest / bucket.name
         allow = tuple(cfg.get(f"{prefix}_ALLOW", ()))
         deny = tuple(cfg.get(f"{prefix}_DENY", ()))
-        extensions = tuple(ext for ext in bucket.extensions + allow if ext not in deny)
+        bucket.extensions = tuple(ext for ext in bucket.extensions + allow if ext not in deny)
+
         resolve_conflicts = cfg.get(f"{prefix}_RESOLVE_CONFLICTS", self._resolve_conflicts)
 
         cloud_bucket = None
@@ -74,7 +75,6 @@ class GoogleStorage:
                     bucket.name,
                     self._client.get_bucket(bucket_name),
                     destination,
-                    extensions=extensions,
                     resolve_conflicts=resolve_conflicts,
                     delete_local=delete_local,
                     signature=cfg.get(f"{prefix}_SIGNATURE", self._signature),
@@ -87,7 +87,7 @@ class GoogleStorage:
             except cloud.exceptions.NotFound:
                 self._app.logger.warning(f"Could not found the bucket for {bucket.name}")
 
-        local_bucket = LocalBucket(bucket.name, destination, extensions, resolve_conflicts)
+        local_bucket = LocalBucket(bucket.name, destination, resolve_conflicts)
         self._register_blueprint(bucket.name, destination)
 
         return local_bucket

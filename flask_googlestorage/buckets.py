@@ -1,6 +1,5 @@
 import base64
 import hashlib
-import uuid
 from contextlib import contextmanager
 from typing import Union, Tuple
 from pathlib import PurePath, Path
@@ -13,7 +12,7 @@ from werkzeug.datastructures import FileStorage
 
 from .exceptions import NotFoundBucketError, NotAllowedUploadError
 from .extensions import DEFAULTS
-from .utils import get_state, secure_filename_ext
+from .utils import get_state, secure_path
 
 
 class LocalBucket:
@@ -33,26 +32,11 @@ class LocalBucket:
     """
 
     def __init__(
-        self,
-        name: str,
-        destination: Path,
-        extensions: Tuple[str, ...] = DEFAULTS,
-        resolve_conflicts: bool = False,
+        self, name: str, destination: Path, resolve_conflicts: bool = False,
     ):
         self.name = name
         self.destination = destination
-        self.extensions = extensions
         self.resolve_conflicts = resolve_conflicts
-
-    def root(self, folder: str = None) -> Path:
-        """
-        Returns the root path for this local bucket
-
-        :param folder: A folder name to be added in the path
-
-        :returns: The :py:class:`pathlib.Path` object
-        """
-        return self.destination if folder is None else self.destination / folder
 
     def url(self, filename: str) -> str:
         """
@@ -64,64 +48,28 @@ class LocalBucket:
 
     signed_url = url
 
-    def file_allowed(self, storage: FileStorage, basename: PurePath) -> bool:
-        """
-        Returns wheter the given file is allowed in this bucket
-
-        :param storage: the file being saved.
-
-        :param basename: the secured name of the file being saved
-
-        :returns: `True` if the extension is allowed and `False` otherwise.
-        """
-        return basename.suffix[1:] in self.extensions
-
-    def save(self, storage: FileStorage, name: str = None, **kwargs) -> PurePath:
+    def save(self, storage: FileStorage, path: PurePath, **kwargs) -> PurePath:
         """
         Save the given file in this bucket and returns its relative path
 
         :param storage: The file to be saved.
 
-        :param name: The name to be used instead of
-                     :py:attr:`werkzeug.datastructures.FileStorage.filename`. If it ends with a dot
-                     `.` the inferred extension will be added. Note that a folder can be included in
-                     the name, e.g., ``"foo/bar.txt"``
+        :param path: The pure path where to save the file. It may be modified in case of conflict.
 
-        :returns: The :py:class:`pathlib.PurePath` relative to this bucket where the file was saved
+        :returns: The :py:class:`pathlib.PurePath` relative to this bucket where the file was saved.
         """
-        if not isinstance(storage, FileStorage):
-            raise TypeError("The given storage must be a werkzeug.FileStorage instance")
-
-        folder = None
-        if name is not None and "/" in name:
-            # TODO: We could handle nested folders
-            folder, name = PurePath(name).parts
-
-        basename = secure_filename_ext(storage.filename)
-
-        if not self.file_allowed(storage, basename):
-            raise NotAllowedUploadError("The given file extension is not allowed")
-
-        if name:
-            if name.endswith("."):
-                basename = PurePath(name[:-1]).with_suffix(basename.suffix)
-            else:
-                basename = PurePath(name)
-
-        root = self.root(folder)
-        root.mkdir(parents=True, exist_ok=True)
-
-        filepath = root / basename
+        (self.destination / path.parent).mkdir(parents=True, exist_ok=True)
+        filepath = self.destination / path
         if self.resolve_conflicts and filepath.exists():
-            stem, suffix = basename.stem, basename.suffix
+            stem, suffix = path.stem, path.suffix
             count = 0
             while filepath.exists():
                 count += 1
-                basename = basename.with_name(f"{stem}_{count}{suffix}")
-                filepath = root / basename
+                path = path.with_name(f"{stem}_{count}{suffix}")
+                filepath = self.destination / path
 
         storage.save(filepath)
-        return PurePath(folder, basename) if folder else PurePath(basename)
+        return path
 
     def delete(self, filename: str):
         """
@@ -129,7 +77,7 @@ class LocalBucket:
 
         :param filename: The name of the file to be deleted.
         """
-        filepath = self.root() / filename
+        filepath = self.destination / filename
         if filepath.is_file():
             filepath.unlink()
 
@@ -140,7 +88,6 @@ class CloudBucket:
         name: str,
         bucket: storage.Bucket,
         destination: Path,
-        extensions: Tuple[str, ...] = DEFAULTS,
         resolve_conflicts: bool = False,
         delete_local: bool = True,
         signature: dict = None,
@@ -150,25 +97,26 @@ class CloudBucket:
         self.delete_local = delete_local
         self.signature = signature or {}
         self.tenacity = tenacity or {}
-        self.local = LocalBucket(
-            name, destination, extensions=extensions, resolve_conflicts=resolve_conflicts
-        )
+        self.local = LocalBucket(name, destination, resolve_conflicts=resolve_conflicts)
 
     def get_blob(self, name: str) -> storage.Blob:
         return self.bucket.get_blob(name)
 
-    def url(self, filename: str) -> str:
-        return self.get_blob(filename).public_url
+    def url(self, name: str) -> str:
+        blob = self.get_blob(name)
+        if blob:
+            return blob.public_url
 
-    def signed_url(self, filename: str) -> str:
-        return self.get_blob(filename).generate_signed_url(**self.signature)
+    def signed_url(self, name: str) -> str:
+        blob = self.get_blob(name)
+        if blob:
+            return blob.generate_signed_url(**self.signature)
 
-    def save(self, storage: FileStorage, name: str = None, public: bool = False) -> PurePath:
-        filename = self.local.save(storage, name=name)
-        filepath = self.local.root() / filename
+    def save(self, storage: FileStorage, path: PurePath, public: bool = False) -> PurePath:
+        path = self.local.save(storage, path)
+        filepath = self.local.destination / path
 
-        blob_name = str(filename) if name else f"{uuid.uuid4()}{filename.suffix}"
-        blob = self.bucket.blob(blob_name)
+        blob = self.bucket.blob(str(path))
         md5_hash = hashlib.md5(filepath.read_bytes())
         blob.md5_hash = base64.b64encode(md5_hash.digest()).decode()
 
@@ -176,7 +124,7 @@ class CloudBucket:
             if self.tenacity:
                 retry(
                     reraise=True, retry=retry_if_exception_type(GoogleCloudError), **self.tenacity
-                )(lambda: blob.upload_from_filename(filename))()
+                )(lambda: blob.upload_from_filename(filepath))()
             else:
                 blob.upload_from_filename(filepath)
         finally:
@@ -186,14 +134,14 @@ class CloudBucket:
         if public:
             blob.make_public()
 
-        return PurePath(blob.name)
+        return path
 
-    def delete(self, filename: str):
-        blob = self.get_blob(filename)
+    def delete(self, name: str):
+        blob = self.get_blob(name)
         if blob:
             blob.delete()
 
-        self.local.delete(filename)
+        self.local.delete(name)
 
 
 class Bucket:
@@ -208,7 +156,7 @@ class Bucket:
     @contextmanager
     def storage_ctx(self, storage: Union[LocalBucket, CloudBucket]):
         self._storage = storage
-        yield
+        yield storage
         self._storage = None
 
     @property
@@ -222,8 +170,25 @@ class Bucket:
         except KeyError:
             raise NotFoundBucketError(f"Storage for bucket '{self.name}' not found")
 
-    def save(self, file_storage: FileStorage, name: str = None, public: bool = False) -> PurePath:
-        return self.storage.save(file_storage, name=name, public=public)
+    def allows(self, path: PurePath, storage: FileStorage) -> bool:
+        return path.suffix[1:] in self.extensions
+
+    def save(
+        self,
+        file_storage: FileStorage,
+        name: str = None,
+        public: bool = False,
+        uuid_name: bool = True,
+    ) -> PurePath:
+        if not isinstance(file_storage, FileStorage):
+            raise TypeError("The given storage must be a werkzeug.FileStorage instance")
+
+        secured_path = secure_path(file_storage.filename, name, uuid_name)
+
+        if not self.allows(secured_path, file_storage):
+            raise NotAllowedUploadError("The given file extension is not allowed")
+
+        return self.storage.save(file_storage, secured_path, public=public)
 
     def delete(self, filename: str):
         return self.storage.delete(filename)
