@@ -26,8 +26,6 @@ class LocalBucket:
 
     :param destination: The absolute path to use for local storage.
 
-    :param extensions: A tuple of allowed extensions.
-
     :param resolve_conflicts: Whether to resolve name conflicts or not.
     """
 
