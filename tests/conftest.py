@@ -36,7 +36,7 @@ def app_init(app):
 
 
 @pytest.fixture
-def app_tmp(app, tmpdir):
+def app_local(app, tmpdir):
     app.config.update({"GOOGLE_STORAGE_LOCAL_DEST": str(tmpdir)})
 
     files = Bucket("files")
@@ -44,19 +44,15 @@ def app_tmp(app, tmpdir):
     storage = GoogleStorage(files)
     storage.init_app(app)
 
-    files.save(FileStorage(stream=io.BytesIO(b"Foo content"), filename="foo.txt"))
-    files.save(FileStorage(stream=io.BytesIO(b"Bar content"), filename="bar.txt"))
+    files.save(FileStorage(stream=io.BytesIO(b"Foo content"), filename="foo.txt"), uuid_name=False)
+    files.save(FileStorage(stream=io.BytesIO(b"Bar content"), filename="bar.txt"), uuid_name=False)
 
     return app
 
 
 @pytest.fixture
-def file_storage_cls():
-    def save_mock(dst, buffer_size=16384):
-        FileStorage.saved = dst
-
-    with mock.patch.object(FileStorage, "save", side_effect=save_mock):
-        yield FileStorage
+def bucket():
+    return Bucket("files")
 
 
 @pytest.fixture
@@ -124,8 +120,8 @@ def app_cloud(google_storage_mock, app, tmpdir):
     storage = GoogleStorage(files, photos)
     storage.init_app(app)
 
-    files.save(FileStorage(stream=io.BytesIO(b"Foo content"), filename="foo.txt"))
-    photos.save(FileStorage(stream=io.BytesIO(b"Photo content"), filename="img.jpg"))
+    files.save(FileStorage(stream=io.BytesIO(b"Foo content"), filename="foo.txt"), uuid_name=False)
+    files.save(FileStorage(stream=io.BytesIO(b"Bar content"), filename="bar.txt"), uuid_name=False)
 
     return app
 

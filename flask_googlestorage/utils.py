@@ -1,3 +1,4 @@
+import uuid
 from pathlib import PurePath
 
 from flask import Flask
@@ -16,7 +17,7 @@ def get_state(app: Flask) -> dict:
     return app.extensions["googlestorage"]
 
 
-def secure_filename_ext(filename: str) -> PurePath:
+def secure_path(filename: str, name: str = None, uuid_name: bool = True) -> PurePath:
     """
     This is a helper used by UploadSet.save to provide lowercase extensions for all processed files,
     to compare with configured extensions in the same case.
@@ -24,6 +25,23 @@ def secure_filename_ext(filename: str) -> PurePath:
     :param filename: The filename to ensure has a lowercase extension.
     """
     ext = PurePath(filename).suffix
-    secured = PurePath(secure_filename(filename))
 
-    return secured if not ext else secured.with_suffix(ext.lower())
+    if name:
+        path = PurePath(name)
+        parent, stem, suffix = path.parent, path.stem, path.suffix
+        if stem.endswith("."):
+            stem = stem[:-1]
+
+        if suffix:
+            ext = suffix
+
+        secure_parent = PurePath(*(secure_filename(part) for part in parent.parts if part != ".."))
+        secure_name = secure_filename(path.name)
+    else:
+        secure_parent = ""
+        secure_name = str(uuid.uuid4()) if uuid_name else secure_filename(filename)
+
+    if not secure_name:
+        secure_name = str(uuid.uuid4())
+
+    return secure_parent / PurePath(secure_name).with_suffix(ext.lower())
