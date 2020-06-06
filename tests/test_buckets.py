@@ -261,10 +261,15 @@ def test_cloud_save_retry(name, app_cloud_retry, tmpdir, empty_txt, google_bucke
         with pytest.raises(GoogleCloudError):
             bucket.save(empty_txt)
 
+        calls = [mock.call(filepath), mock.call(filepath)]
         assert google_bucket_error_mock.get_blob().upload_from_filename.call_count == 2
+        assert google_bucket_error_mock.get_blob().upload_from_filename.has_calls(calls)
     else:
         bucket.save(empty_txt)
+
+        calls = [mock.call(filepath), mock.call(filepath), mock.call(filepath)]
         assert google_bucket_error_mock.get_blob().upload_from_filename.call_count == 3
+        assert google_bucket_error_mock.get_blob().upload_from_filename.has_calls(calls)
 
 
 @pytest.mark.parametrize("file, content", [("foo.txt", "Foo content"), ("bar.txt", "Bar content")])
