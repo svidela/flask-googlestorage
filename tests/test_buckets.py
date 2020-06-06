@@ -211,26 +211,30 @@ def test_cloud_save(path, delete_local, empty_txt, cloud_bucket):
 
 @pytest.mark.parametrize("public", (True, False))
 def test_cloud_save_public(public, google_bucket_mock, empty_txt, cloud_bucket):
-    cloud_bucket.save(empty_txt, pathlib.PurePath("empty.txt"), public=public)
+    cloud_bucket.save(empty_txt, pathlib.PurePath("foo.txt"), public=public)
     if public:
-        google_bucket_mock.get_blob().make_public.assert_called_once()
+        google_bucket_mock.get_blob("foo.txt").make_public.assert_called_once()
     else:
-        google_bucket_mock.get_blob().make_public.assert_not_called()
+        google_bucket_mock.get_blob("foo.txt").make_public.assert_not_called()
 
 
 def test_cloud_delete(cloud_bucket, google_bucket_mock):
     cloud_bucket.delete("foo.txt")
-    google_bucket_mock.get_blob().delete.assert_called_once()
+    google_bucket_mock.get_blob("foo.txt").delete.assert_called_once()
+
+    cloud_bucket.delete("bar.txt")
 
 
 def test_cloud_url(app_cloud, cloud_bucket):
     with app_cloud.test_request_context():
-        assert cloud_bucket.url("foo.txt") == "http://google-storage-url/"
+        assert cloud_bucket.url("foo.txt") == "http://google-storage-url/foo.txt"
+        assert cloud_bucket.url("bar.txt") is None
 
 
 def test_cloud_signed_url(app_cloud, cloud_bucket):
     with app_cloud.test_request_context():
-        assert cloud_bucket.signed_url("foo.txt") == "http://google-storage-signed-url/"
+        assert cloud_bucket.signed_url("foo.txt") == "http://google-storage-signed-url/foo.txt"
+        assert cloud_bucket.signed_url("bar.txt") is None
 
 
 @pytest.mark.parametrize("name", ("files", "photos"))

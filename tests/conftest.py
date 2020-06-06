@@ -69,17 +69,21 @@ def empty_txt():
 def google_bucket_mock():
     bucket = mock.MagicMock()
     blob = mock.MagicMock()
-    public_url = mock.PropertyMock(return_value="http://google-storage-url/")
+    public_url = mock.PropertyMock(return_value="http://google-storage-url/foo.txt")
 
     type(blob).public_url = public_url
-    blob.generate_signed_url.return_value = "http://google-storage-signed-url/"
+    blob.generate_signed_url.return_value = "http://google-storage-signed-url/foo.txt"
 
     def get_named_blob(name):
         type(blob).name = name
         return blob
 
+    def get_blob(name):
+        if name == "foo.txt":
+            return blob
+
     bucket.blob.side_effect = get_named_blob
-    bucket.get_blob.return_value = blob
+    bucket.get_blob.side_effect = get_blob
 
     return bucket
 

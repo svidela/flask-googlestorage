@@ -69,10 +69,14 @@ class CloudBucket:
         return self.bucket.get_blob(name)
 
     def url(self, name: str) -> str:
-        return self.get_blob(name).public_url
+        blob = self.get_blob(name)
+        if blob:
+            return blob.public_url
 
     def signed_url(self, name: str) -> str:
-        return self.get_blob(name).generate_signed_url(**self.signature)
+        blob = self.get_blob(name)
+        if blob:
+            return blob.generate_signed_url(**self.signature)
 
     def save(self, storage: FileStorage, path: PurePath, public: bool = False) -> PurePath:
         path = self.local.save(storage, path)
