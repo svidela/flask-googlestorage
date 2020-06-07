@@ -55,25 +55,33 @@ def test_bucket_allows_all(filename, bucket):
     assert bucket.allows(pathlib.PurePath(filename), None)
 
 
-@pytest.mark.parametrize("filename, allowed", [("filename.exe", False), ("filename.txt", True)])
-def test_bucket_allows(filename, allowed, bucket):
-    bucket._allows = lambda p, f: p.suffix[1:] == "txt"
-    assert bucket.allows(pathlib.PurePath(filename), None) == allowed
+@pytest.mark.parametrize(
+    "filename, allowed", [("filename.exe", False), ("filename.txt", True), ("filename.jpg", True)]
+)
+def test_bucket_allows_by_extension(filename, allowed, empty_txt):
+    bucket = Bucket("files", allows=lambda f, p: p.suffix != ".exe")
+    assert bucket.allows(empty_txt, pathlib.PurePath(filename)) == allowed
 
 
-@pytest.mark.parametrize("filename, allowed", [("filename.exe", False), ("filename.txt", True)])
-def test_custom_bucket_allows(filename, allowed, custom_bucket):
-    if filename == "filename.txt":
-        assert custom_bucket.allows(pathlib.PurePath(filename), None)
-    else:
-        with pytest.raises(NotAllowedUploadError) as e_info:
-            custom_bucket.allows(pathlib.PurePath(filename), None)
+def test_bucket_allows_by_filetype(datadir, images_bucket, local_bucket):
+    orig_file = datadir / "flask.jpg"
+    uploaded_file = local_bucket.destination / "flask.jpg"
 
-        assert str(e_info.value) == "Custom validation error message"
+    assert not uploaded_file.exists()
+    with images_bucket.storage_ctx(local_bucket):
+        images_bucket.save(FileStorage(orig_file.open("rb")), name="flask.jpg")
+
+    assert uploaded_file.exists()
+    assert uploaded_file.read_bytes() == orig_file.read_bytes()
+
+    with pytest.raises(NotAllowedUploadError) as e_info:
+        images_bucket.save(FileStorage((datadir / "foo.zip").open("rb")), name="foo.jpg")
+
+    assert str(e_info.value) == "Custom validation error message"
 
 
 def test_save_not_allowed(bucket):
-    bucket._allows = lambda p, f: False
+    bucket._allows = lambda f, p: False
     with pytest.raises(NotAllowedUploadError) as e_info:
         bucket.save(FileStorage(filename="not-allowed.exe"))
 

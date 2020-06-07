@@ -135,9 +135,9 @@ class Bucket:
         except KeyError:
             raise NotFoundBucketError(f"Storage for bucket '{self.name}' not found")
 
-    def allows(self, path: PurePath, storage: FileStorage) -> bool:
+    def allows(self, file_storage: FileStorage, path: PurePath) -> bool:
         if self._allows:
-            return self._allows(path, storage)
+            return self._allows(file_storage, path)
 
         return True
 
@@ -153,7 +153,7 @@ class Bucket:
 
         secured_path = secure_path(file_storage.filename, name, uuid_name)
 
-        if not self.allows(secured_path, file_storage):
+        if not self.allows(file_storage, secured_path):
             raise NotAllowedUploadError("The given file is not allowed in this bucket")
 
         return self.storage.save(file_storage, secured_path, public=public)

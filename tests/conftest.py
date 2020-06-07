@@ -3,6 +3,7 @@ import pathlib
 from unittest import mock
 
 import pytest
+import filetype
 from flask import Flask
 from google.cloud.exceptions import NotFound, GoogleCloudError
 from tenacity import wait_fixed, stop_after_attempt
@@ -60,17 +61,22 @@ def bucket():
     return Bucket("files")
 
 
-class CustomBucket(Bucket):
-    def allows(self, path, storage):
-        if path.suffix[1:] == "txt":
-            return True
-        else:
+class ImagesBucket(Bucket):
+    def allows(self, file_storage, path):
+        matched = filetype.image_match(file_storage.read())
+        # Set the file object's position to the beginning if you read it
+        file_storage.seek(0)
+
+        if matched is None:
+            # return False will raise with default error message
             raise NotAllowedUploadError("Custom validation error message")
+
+        return True
 
 
 @pytest.fixture
-def custom_bucket():
-    return CustomBucket("files")
+def images_bucket():
+    return ImagesBucket("images")
 
 
 @pytest.fixture
