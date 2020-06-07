@@ -28,7 +28,7 @@ Utils
 =====
 
 .. autofunction:: flask_googlestorage.utils.get_state
-.. autofunction:: flask_googlestorage.utils.secure_filename_ext
+.. autofunction:: flask_googlestorage.utils.secure_path
 
 Exceptions
 ==========

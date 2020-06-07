@@ -27,20 +27,31 @@ class LocalBucket:
     :param destination: The absolute path to use for local storage.
 
     :param resolve_conflicts: Whether to resolve name conflicts or not.
+
+    :var name:
+    :var destination:
+    :var resolve_conflicts:
     """
 
     def __init__(
         self, name: str, destination: Path, resolve_conflicts: bool = False,
     ):
+        #:
         self.name = name
+
+        #:
         self.destination = destination
+
+        #:
         self.resolve_conflicts = resolve_conflicts
 
     def url(self, filename: str) -> str:
         """
-        Returns the url served by the :py:class:`flask.Flask` application
+        Returns the URL served by the :py:class:`flask.Flask` application.
 
-        :param filename: The filename to be downloaded from the bucket
+        :param filename: The filename to be downloaded from the bucket.
+
+        :returns: The URL to download the file.
         """
         return url_for(f"{self.name}_uploads.download_file", filename=filename, _external=True)
 
@@ -50,9 +61,14 @@ class LocalBucket:
         """
         Save the given file in this bucket and returns its relative path
 
-        :param storage: The file to be saved.
+        :param storage: The file to be saved as an instance of
+                        :py:class:`werkzeug.datastructures.FileStorage`.
 
-        :param path: The pure path where to save the file. It may be modified in case of conflict.
+        :param path: The relative path where to save the file in this bucket. It will be modified in
+                     case of conflicts if
+                     :py:attr:`flask_googlestorage.LocalBucket.resolve_conflicts` is ``True``. Note
+                     that the path should be secured beforehand. You may use
+                     :py:func:`flask_googlestorage.utils.secure_path` for this.
 
         :returns: The :py:class:`pathlib.PurePath` relative to this bucket where the file was saved.
         """
@@ -81,6 +97,35 @@ class LocalBucket:
 
 
 class CloudBucket:
+    """
+    This class represents a bucket in Google Cloud Storage. Apart from the
+    :py:class:`google.cloud.storage.Bucket` instance, it takes all the arguments required and
+    accepted by :py:class:`flask_googlestorage.LocalBucket` in order to create a local bucket for
+    temporary storage. Uploaded files will be first saved locally using the local bucket and then
+    uploaded to the cloud.
+
+    :param name: The name for the local bucket.
+
+    :param bucket: The :py:class:`google.cloud.storage.Bucket` instance.
+
+    :param destination: The absolute path to use for local storage.
+
+    :param resolve_conflicts: Whether to resolve name conflicts or not when saving locally.
+
+    :param delete_local: Whether to delete local files after uploading to the cloud.
+
+    :param signature: A dictionary specifying the keyword arguments for building the signed url.
+
+    :param tenaicy: A dictionary specifying the keyword arguments for the :py:func:`tenacity.retry`
+                    decorator.
+
+    :var bucket:
+    :var delete_local:
+    :var signature:
+    :var tenacity:
+    :var local:
+    """
+
     def __init__(
         self,
         name: str,
@@ -98,19 +143,59 @@ class CloudBucket:
         self.local = LocalBucket(name, destination, resolve_conflicts=resolve_conflicts)
 
     def get_blob(self, name: str) -> storage.Blob:
+        """
+        Get a :py:class:`google.cloud.storage.blob.Blob` instance by name.
+
+        :param name: The blob name.
+
+        :returns: The :py:class:`google.cloud.storage.blob.Blob` instance.
+        """
         return self.bucket.get_blob(name)
 
     def url(self, name: str) -> str:
+        """
+        Returns the public URL served by Google Cloud Storage. The blob should be publicly available
+        in order to actually use this URL.
+
+        :param name: The blob name to be downloaded from the bucket
+
+        :returns: The public URL to download the file.
+        """
         blob = self.get_blob(name)
         if blob:
             return blob.public_url
 
     def signed_url(self, name: str) -> str:
+        """
+        Returns the signed URL served by Google Cloud Storage. Use either
+        ``GOOGLE_STORAGE_SIGNATURE`` (for all buckets) or ``GOOGLE_STORAGE_X_SIGNATURE`` (for bucket
+        ``X``) to configure the arguments passed to
+        :py:func:`google.cloud.storage.blob.Blob.generate_signed_url`.
+
+        :param name: The blob name to be downloaded from the bucket
+
+        :returns: The signed URL to download the file.
+        """
         blob = self.get_blob(name)
         if blob:
             return blob.generate_signed_url(**self.signature)
 
     def save(self, storage: FileStorage, path: PurePath, public: bool = False) -> PurePath:
+        """
+        Save the given file in this bucket and returns its relative path
+
+        :param storage: The file to be saved as an instance of
+                        :py:class:`werkzeug.datastructures.FileStorage`.
+
+        :param path: The relative path where to save the file in this bucket. It may be modified
+                     when calling :py:func:`flask_googlestorage.LocalBucket.save`. Note that the
+                     path should be secured beforehand. You may use
+                     :py:func:`flask_googlestorage.utils.secure_path` for this.
+
+        :param public: Whether to make the uploaded file publicly available or not.
+
+        :returns: The :py:class:`pathlib.PurePath` relative to this bucket where the file was saved.
+        """
         path = self.local.save(storage, path)
         filepath = self.local.destination / path
 
@@ -135,6 +220,11 @@ class CloudBucket:
         return path
 
     def delete(self, name: str):
+        """
+        Delete the blob with the given name if it exists.
+
+        :param name: The name of the blob to be deleted.
+        """
         blob = self.get_blob(name)
         if blob:
             blob.delete()

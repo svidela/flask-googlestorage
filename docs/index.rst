@@ -64,9 +64,8 @@ The URL for a given filename can be obtained using:
 Configuration
 =============
 
-The following configuration values exist for **Flask-GoogleStorage**.
-**Flask-GoogleStorage** loads these values from your main Flask config which can
-be populated in various ways.
+The following configuration values are available. **Flask-GoogleStorage** loads these values from
+your main Flask config which can be populated in various ways.
 
 Configuration Keys
 ------------------
