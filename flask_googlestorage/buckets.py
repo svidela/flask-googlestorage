@@ -136,10 +136,19 @@ class CloudBucket:
         signature: dict = None,
         tenacity: dict = None,
     ):
+        #:
         self.bucket = bucket
+
+        #:
         self.delete_local = delete_local
+
+        #:
         self.signature = signature or {}
+
+        #:
         self.tenacity = tenacity or {}
+
+        #:
         self.local = LocalBucket(name, destination, resolve_conflicts=resolve_conflicts)
 
     def get_blob(self, name: str) -> storage.Blob:
