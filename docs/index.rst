@@ -89,8 +89,6 @@ A list of configuration keys currently understood by the extension:
 ``GOOGLE_STORAGE_X_TENACITY``          Overwrite ``GOOGLE_STORAGE_TENACITY`` for bucket ``X``.
 ``GOOGLE_STORAGE_X_RESOLVE_CONFLICTS`` Overwrite ``GOOGLE_STORAGE_RESOLVE_CONFLICTS`` for bucket ``X``.
 ``GOOGLE_STORAGE_X_DELETE_LOCAL``      Overwrite ``GOOGLE_STORAGE_DELETE_LOCAL`` for bucket ``X``.
-``GOOGLE_STORAGE_X_ALLOW``             Tuple of allowed extensions for bucket ``X``.
-``GOOGLE_STORAGE_X_DENY``              Tuple of denyed extensions for bucket ``X``.
 ``GOOGLE_STORAGE_X_BUCKET``            Bucket id for bucket ``X``. If the bucket is not found, files will be
                                        saved and served locally.
 ====================================== =========================================
