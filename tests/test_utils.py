@@ -35,5 +35,5 @@ from flask_googlestorage.utils import secure_path
 )
 def test_secure_path(filename, name, uuid_name, expected):
     fixed_uuid = uuid.UUID("a53d500f-bf6a-4978-9240-922a763d31cb")
-    with mock.patch("flask_googlestorage.utils.uuid.uuid4", return_value=fixed_uuid):
+    with mock.patch("flask_googlestorage.utils.uuid4", return_value=fixed_uuid):
         assert str(secure_path(filename, name, uuid_name)) == expected

@@ -1,5 +1,5 @@
-import uuid
 from pathlib import PurePath
+from uuid import uuid4
 
 from flask import Flask
 from werkzeug.utils import secure_filename
@@ -39,9 +39,9 @@ def secure_path(filename: str, name: str = None, uuid_name: bool = True) -> Pure
         secure_name = secure_filename(path.name)
     else:
         secure_parent = ""
-        secure_name = str(uuid.uuid4()) if uuid_name else secure_filename(filename)
+        secure_name = str(uuid4()) if uuid_name else secure_filename(filename)
 
     if not secure_name:
-        secure_name = str(uuid.uuid4())
+        secure_name = str(uuid4())
 
     return secure_parent / PurePath(secure_name).with_suffix(ext.lower())
