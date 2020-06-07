@@ -30,7 +30,7 @@ def secure_path(filename: str, name: str = None, uuid_name: bool = True) -> Pure
 
     :param name: A name preferred over the original filename which could contain nested folders.
 
-    :uuid_name: If set to ``True`` a UUID name is preferred over the original filename.
+    :param uuid_name: If set to ``True`` a UUID name is preferred over the original filename.
 
     :returns: A secured filename with the extension in lower case
     """

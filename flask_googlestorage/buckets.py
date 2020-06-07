@@ -36,13 +36,13 @@ class LocalBucket:
     def __init__(
         self, name: str, destination: Path, resolve_conflicts: bool = False,
     ):
-        #:
+        #: The name of this bucket
         self.name = name
 
-        #:
+        #: The destination root path of this bucket
         self.destination = destination
 
-        #:
+        #: Whether to resolve name conflicts or not
         self.resolve_conflicts = resolve_conflicts
 
     def url(self, filename: str) -> str:
@@ -114,7 +114,8 @@ class CloudBucket:
 
     :param delete_local: Whether to delete local files after uploading to the cloud.
 
-    :param signature: A dictionary specifying the keyword arguments for building the signed url.
+    :param signature: A dictionary specifying the keyword arguments for building the signed url
+                      using :py:func:`google.cloud.storage.blob.Blob.generate_signed_url`.
 
     :param tenaicy: A dictionary specifying the keyword arguments for the :py:func:`tenacity.retry`
                     decorator.
@@ -136,19 +137,19 @@ class CloudBucket:
         signature: dict = None,
         tenacity: dict = None,
     ):
-        #:
+        #: The :py:class:`google.cloud.storage.Bucket` instance.
         self.bucket = bucket
 
-        #:
+        #: Whether to delete local files after uploading to the cloud.
         self.delete_local = delete_local
 
-        #:
+        #: Keyword arguments passed to :py:func:`google.cloud.storage.blob.Blob.generate_signed_url`
         self.signature = signature or {}
 
-        #:
+        #: Keyword arguments passed to :py:func:`tenacity.retry`.
         self.tenacity = tenacity or {}
 
-        #:
+        #: The :py:class:`flask_googlestorage.LocalBucket` instance used for temporary storage.
         self.local = LocalBucket(name, destination, resolve_conflicts=resolve_conflicts)
 
     def get_blob(self, name: str) -> storage.Blob:
