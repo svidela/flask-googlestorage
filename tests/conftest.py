@@ -8,8 +8,13 @@ from google.cloud.exceptions import NotFound, GoogleCloudError
 from tenacity import wait_fixed, stop_after_attempt
 from werkzeug.datastructures import FileStorage
 
-from flask_googlestorage import GoogleStorage, Bucket
-from flask_googlestorage.buckets import LocalBucket, CloudBucket
+from flask_googlestorage import (
+    GoogleStorage,
+    Bucket,
+    LocalBucket,
+    CloudBucket,
+    NotAllowedUploadError,
+)
 
 
 @pytest.fixture
@@ -53,6 +58,19 @@ def app_local(app, tmpdir):
 @pytest.fixture
 def bucket():
     return Bucket("files")
+
+
+class CustomBucket(Bucket):
+    def allows(self, path, storage):
+        if path.suffix[1:] == "txt":
+            return True
+        else:
+            raise NotAllowedUploadError("Custom validation error message")
+
+
+@pytest.fixture
+def custom_bucket():
+    return CustomBucket("files")
 
 
 @pytest.fixture

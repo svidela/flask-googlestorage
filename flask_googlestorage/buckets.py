@@ -1,7 +1,7 @@
 import base64
 import hashlib
 from contextlib import contextmanager
-from typing import Union, Tuple
+from typing import Union, Callable
 from pathlib import PurePath, Path
 
 from flask import current_app, url_for
@@ -11,7 +11,6 @@ from tenacity import retry, retry_if_exception_type
 from werkzeug.datastructures import FileStorage
 
 from .exceptions import NotFoundBucketError, NotAllowedUploadError
-from .extensions import DEFAULTS
 from .utils import get_state, secure_path
 
 
@@ -111,12 +110,12 @@ class CloudBucket:
 
 
 class Bucket:
-    def __init__(self, name: str, extensions: Tuple[str, ...] = DEFAULTS):
+    def __init__(self, name: str, allows: Callable = None):
         if not name.isalnum():
             raise ValueError("Name must be alphanumeric (no underscores)")
 
         self.name = name
-        self.extensions = extensions
+        self._allows = allows
         self._storage = None
 
     @contextmanager
@@ -137,7 +136,10 @@ class Bucket:
             raise NotFoundBucketError(f"Storage for bucket '{self.name}' not found")
 
     def allows(self, path: PurePath, storage: FileStorage) -> bool:
-        return path.suffix[1:] in self.extensions
+        if self._allows:
+            return self._allows(path, storage)
+
+        return True
 
     def save(
         self,
@@ -152,7 +154,7 @@ class Bucket:
         secured_path = secure_path(file_storage.filename, name, uuid_name)
 
         if not self.allows(secured_path, file_storage):
-            raise NotAllowedUploadError("The given file extension is not allowed")
+            raise NotAllowedUploadError("The given file is not allowed in this bucket")
 
         return self.storage.save(file_storage, secured_path, public=public)
 

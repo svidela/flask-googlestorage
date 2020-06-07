@@ -50,16 +50,34 @@ def test_save_error(bucket):
     assert str(e_info.value) == "The given storage must be a werkzeug.FileStorage instance"
 
 
+@pytest.mark.parametrize("filename", ("filename.exe", "filename.txt"))
+def test_bucket_allows_all(filename, bucket):
+    assert bucket.allows(pathlib.PurePath(filename), None)
+
+
 @pytest.mark.parametrize("filename, allowed", [("filename.exe", False), ("filename.txt", True)])
 def test_bucket_allows(filename, allowed, bucket):
+    bucket._allows = lambda p, f: p.suffix[1:] == "txt"
     assert bucket.allows(pathlib.PurePath(filename), None) == allowed
 
 
+@pytest.mark.parametrize("filename, allowed", [("filename.exe", False), ("filename.txt", True)])
+def test_custom_bucket_allows(filename, allowed, custom_bucket):
+    if filename == "filename.txt":
+        assert custom_bucket.allows(pathlib.PurePath(filename), None)
+    else:
+        with pytest.raises(NotAllowedUploadError) as e_info:
+            custom_bucket.allows(pathlib.PurePath(filename), None)
+
+        assert str(e_info.value) == "Custom validation error message"
+
+
 def test_save_not_allowed(bucket):
+    bucket._allows = lambda p, f: False
     with pytest.raises(NotAllowedUploadError) as e_info:
         bucket.save(FileStorage(filename="not-allowed.exe"))
 
-    assert str(e_info.value) == "The given file extension is not allowed"
+    assert str(e_info.value) == "The given file is not allowed in this bucket"
 
 
 def test_storage_mocking(bucket):
