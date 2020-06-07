@@ -50,16 +50,46 @@ def test_save_error(bucket):
     assert str(e_info.value) == "The given storage must be a werkzeug.FileStorage instance"
 
 
-@pytest.mark.parametrize("filename, allowed", [("filename.exe", False), ("filename.txt", True)])
-def test_bucket_allows(filename, allowed, bucket):
-    assert bucket.allows(pathlib.PurePath(filename), None) == allowed
+@pytest.mark.parametrize("filename", ("filename.exe", "filename.txt", "filename.jpg"))
+def test_bucket_save_all_allowed(filename, bucket):
+    with bucket.storage_ctx(mock.MagicMock()) as storage_mock:
+        bucket.save(FileStorage(filename=filename))
+
+    storage_mock.save.assert_called_once()
 
 
-def test_save_not_allowed(bucket):
+@pytest.mark.parametrize("filename", ("filename.exe", "filename.txt", "filename.jpg"))
+def test_bucket_save_none_allowed(filename):
+    bucket = Bucket("files", allows=lambda f, p: False)
     with pytest.raises(NotAllowedUploadError) as e_info:
-        bucket.save(FileStorage(filename="not-allowed.exe"))
+        bucket.save(FileStorage(filename=filename))
 
-    assert str(e_info.value) == "The given file extension is not allowed"
+    assert str(e_info.value) == "The given file is not allowed in this bucket"
+
+
+def test_bucket_save_images_allowed(datadir, images_bucket, local_bucket):
+    orig_file = datadir / "flask.jpg"
+    uploaded_file = local_bucket.destination / "flask.jpg"
+
+    assert not uploaded_file.exists()
+    with images_bucket.storage_ctx(local_bucket):
+        images_bucket.save(FileStorage(orig_file.open("rb")), name="flask.jpg")
+
+    assert uploaded_file.exists()
+    assert uploaded_file.read_bytes() == orig_file.read_bytes()
+
+    with pytest.raises(NotAllowedUploadError) as e_info:
+        images_bucket.save(FileStorage((datadir / "foo.zip").open("rb")), name="foo.jpg")
+
+    assert str(e_info.value) == "Custom validation error message"
+
+
+@pytest.mark.parametrize(
+    "filename, allowed", [("filename.exe", False), ("filename.txt", True), ("filename.jpg", True)]
+)
+def test_bucket_allows_by_extension(filename, allowed, empty_txt):
+    bucket = Bucket("files", allows=lambda f, p: p.suffix != ".exe")
+    assert bucket.allows(empty_txt, pathlib.PurePath(filename)) == allowed
 
 
 def test_storage_mocking(bucket):
