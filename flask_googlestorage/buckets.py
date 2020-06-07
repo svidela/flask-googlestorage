@@ -136,10 +136,7 @@ class Bucket:
             raise NotFoundBucketError(f"Storage for bucket '{self.name}' not found")
 
     def allows(self, file_storage: FileStorage, path: PurePath) -> bool:
-        if self._allows:
-            return self._allows(file_storage, path)
-
-        return True
+        return self._allows is None or self._allows(file_storage, path)
 
     def save(
         self,
