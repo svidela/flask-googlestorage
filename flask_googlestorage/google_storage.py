@@ -60,10 +60,6 @@ class GoogleStorage:
         prefix = f"{self._prefix}_{bucket.name.upper()}"
 
         destination = uploads_dest / bucket.name
-        allow = tuple(cfg.get(f"{prefix}_ALLOW", ()))
-        deny = tuple(cfg.get(f"{prefix}_DENY", ()))
-        bucket.extensions = tuple(ext for ext in bucket.extensions + allow if ext not in deny)
-
         resolve_conflicts = cfg.get(f"{prefix}_RESOLVE_CONFLICTS", self._resolve_conflicts)
 
         cloud_bucket = None
