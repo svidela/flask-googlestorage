@@ -20,4 +20,4 @@ This project started as a fork of [Flask-Uploads](https://github.com/maxcountrym
 
 ## License
 
-MIT licensed. See the [LICENSE](https://github.com/svidela/flask-googlestorage/blob/master/LICENSE>) file for more details.
+MIT licensed. See the [LICENSE](https://github.com/svidela/flask-googlestorage/blob/master/LICENSE) file for more details.
