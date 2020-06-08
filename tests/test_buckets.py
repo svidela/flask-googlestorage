@@ -47,7 +47,9 @@ def test_save_error(bucket):
     with pytest.raises(TypeError) as e_info:
         bucket.save("not a FileStorage instance")
 
-    assert str(e_info.value) == "The given storage must be a werkzeug.FileStorage instance"
+    assert str(e_info.value) == (
+        "The given storage must be a werkzeug.datastructures.FileStorage instance"
+    )
 
 
 @pytest.mark.parametrize("filename", ("filename.exe", "filename.txt", "filename.jpg"))

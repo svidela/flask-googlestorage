@@ -24,7 +24,9 @@ class GoogleStorage:
 
     def init_app(self, app: Flask):
         """
-        Initialize the extension in the given :py:class:`flask.Flask` application instance
+        Initialize the extension for the given :py:class:`flask.Flask` application instance
+
+        :param app: The application instance
         """
         self._app = app
         self._prefix = "GOOGLE_STORAGE"

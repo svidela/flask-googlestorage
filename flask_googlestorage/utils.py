@@ -9,8 +9,8 @@ def get_state(app: Flask) -> dict:
     """
     Gets the extension state for the given application
 
-    :param app: The :py:class:`flask.Flask` application instance
-    :returns: A dictionary describing the extension state for the given application
+    :param app: The application instance
+    :returns: The extension state for the given application
     """
 
     assert "googlestorage" in app.extensions, (
@@ -22,9 +22,8 @@ def get_state(app: Flask) -> dict:
 
 def secure_path(filename: str, name: str = None, uuid_name: bool = True) -> PurePath:
     """
-    This is a helper used by :py:func:`flask_googlestorage.Bucket.save` to get a secured path. Also,
-    lowercase extensions are enforced for all processed files in order to compare them with
-    configured extensions in the same case.
+    This is a helper used by :py:func:`flask_googlestorage.Bucket.save` to get a secured path. with
+    the file extension in lower case.
 
     :param filename: The original filename.
 
