@@ -37,7 +37,7 @@ Installation
 Documentation
 =============
 
-Full documentation is available at <http://flask-googlestorage.readthedocs.io>
+Full documentation is available at http://flask-googlestorage.readthedocs.io
 
 About
 =====
