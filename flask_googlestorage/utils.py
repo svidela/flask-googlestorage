@@ -7,7 +7,10 @@ from werkzeug.utils import secure_filename
 
 def get_state(app: Flask) -> dict:
     """
-    Gets the state for the application
+    Gets the extension state for the given application
+
+    :param app: The application instance
+    :returns: The extension state for the given application
     """
 
     assert "googlestorage" in app.extensions, (
@@ -19,10 +22,16 @@ def get_state(app: Flask) -> dict:
 
 def secure_path(filename: str, name: str = None, uuid_name: bool = True) -> PurePath:
     """
-    This is a helper used by UploadSet.save to provide lowercase extensions for all processed files,
-    to compare with configured extensions in the same case.
+    This is a helper used by :py:func:`flask_googlestorage.Bucket.save` to get a secured path. with
+    the file extension in lower case.
 
-    :param filename: The filename to ensure has a lowercase extension.
+    :param filename: The original filename.
+
+    :param name: A name preferred over the original filename which could contain nested folders.
+
+    :param uuid_name: If set to ``True`` a UUID name is preferred over the original filename.
+
+    :returns: A secured filename with the extension in lower case
     """
     ext = PurePath(filename).suffix
 

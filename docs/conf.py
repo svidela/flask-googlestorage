@@ -42,7 +42,9 @@ extensions = [
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "flask": ("http://flask.pocoo.org/docs/", None),
+    "werkzeug": ("https://werkzeug.palletsprojects.com/", None),
     "google-cloud-storage": ("https://googleapis.dev/python/storage/latest/index.html", None),
+    "tenacity": ("https://tenacity.readthedocs.io/", None),
 }
 issues_github_path = "svidela/flask-googlestorage"
 
