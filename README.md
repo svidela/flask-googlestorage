@@ -18,6 +18,6 @@ Full documentation is available at <http://flask-googlestorage.readthedocs.io>
 
 This project started as a fork of [Flask-Uploads](https://github.com/maxcountryman/flask-uploads). In fact, the way in which buckets are defined and how files are saved locally before uploading them to Google Cloud was mainly inspired by the class `UploadSet` in Flask-Uploads. Although is not its main focus, this extension could be used for local storage and serve uploaded files with Flask similarly to what Flask-Uploads does. This feature is provided mainly to have storage capabilities without using Google Cloud during development.
 
-## License
+## License
 
 MIT licensed. See the [LICENSE](https://github.com/svidela/flask-googlestorage/blob/master/LICENSE>) file for more details.
