@@ -6,3 +6,5 @@ coverage.xml
 .python-version
 __pycache__
 docs/_build
+build
+dist
