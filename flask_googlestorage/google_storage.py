@@ -94,7 +94,7 @@ class GoogleStorage:
         bp = Blueprint(f"{name}_uploads", name, url_prefix=f"/_uploads/{name}")
 
         @bp.route("/<path:filename>")
-        def download_file(filename):
+        def download_file(filename):  # pylint: disable=unused-variable
             return send_from_directory(destination, filename)
 
         self._app.register_blueprint(bp)

@@ -19,6 +19,10 @@ Flask-GoogleStorage
     :target: https://codecov.io/gh/svidela/flask-googlestorage
     :alt: Code coverage
 
+.. image:: https://app.codacy.com/project/badge/Grade/b0317a3f9e8d4cfe8d8ab61c6d92942f
+    :target: https://www.codacy.com/manual/svidela/flask-googlestorage
+    :alt: Code quality
+
 .. image:: https://readthedocs.org/projects/flask-googlestorage/badge/
     :target: http://flask-googlestorage.readthedocs.io/
     :alt: Documentation

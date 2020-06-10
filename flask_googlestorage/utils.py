@@ -12,7 +12,6 @@ def get_state(app: Flask) -> dict:
     :param app: The application instance
     :returns: The extension state for the given application
     """
-
     assert "googlestorage" in app.extensions, (
         "The googlestorage extension was not registered to the current "
         "application. Please make sure to call init_app() first."

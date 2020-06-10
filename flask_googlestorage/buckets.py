@@ -198,7 +198,7 @@ class CloudBucket:
         filepath = self.local.destination / path
 
         blob = self.bucket.blob(str(path))
-        md5_hash = hashlib.md5(filepath.read_bytes())
+        md5_hash = hashlib.md5(filepath.read_bytes())  # nosec
         blob.md5_hash = base64.b64encode(md5_hash.digest()).decode()
 
         try:
