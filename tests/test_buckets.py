@@ -20,7 +20,7 @@ def test_name_alnum():
 
 def test_config_runtime_error(bucket):
     with pytest.raises(RuntimeError) as e_info:
-        bucket.storage
+        bucket.storage  # pylint: disable=pointless-statement
 
     assert "Working outside of application context." in str(e_info.value)
 
@@ -182,11 +182,11 @@ def test_local_save_multi_conflict(resolve, path, expected, empty_txt, local_buc
     foo = pathlib.Path(local_bucket.destination) / path
     foo.touch()
     for n in range(1, 6):
-        foo_n = pathlib.Path(local_bucket.destination) / f"foo_{n}.txt"
+        foo_n = pathlib.Path(local_bucket.destination) / f"{path.stem}_{n}{path.suffix}"
         foo_n.touch()
 
     local_bucket.resolve_conflicts = resolve
-    local_bucket.save(empty_txt, path) == pathlib.PurePath(expected)
+    assert local_bucket.save(empty_txt, path) == pathlib.PurePath(expected)
 
 
 def test_local_delete(local_bucket):
