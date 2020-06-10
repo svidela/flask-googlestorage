@@ -48,3 +48,8 @@ License
 =======
 
 MIT licensed. See the `LICENSE <https://github.com/svidela/flask-googlestorage/blob/master/LICENSE>`_ file for more details.
+
+
+.. image:: https://api.codacy.com/project/badge/Grade/d09202aba6e549e3bcd05c55105f6dfc
+   :alt: Codacy Badge
+   :target: https://app.codacy.com/manual/svidela/flask-googlestorage?utm_source=github.com&utm_medium=referral&utm_content=svidela/flask-googlestorage&utm_campaign=Badge_Grade_Dashboard
