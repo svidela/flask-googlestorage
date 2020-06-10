@@ -29,5 +29,5 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-    keywords=["flask", "google", "cloud" "storage"],
+    keywords=["flask", "google", "cloud", "storage"],
 )
