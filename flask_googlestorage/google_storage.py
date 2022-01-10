@@ -83,7 +83,7 @@ class GoogleStorage:
 
                 return cloud_bucket
             except cloud.exceptions.NotFound:
-                self._app.logger.warning(f"Could not found the bucket for {bucket.name}")
+                self._app.logger.warning(f"Could not find the bucket for {bucket.name}")
 
         local_bucket = LocalBucket(bucket.name, destination, resolve_conflicts)
         self._register_blueprint(bucket.name, destination)
