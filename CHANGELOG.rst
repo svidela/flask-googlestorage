@@ -8,6 +8,7 @@ Changelog
 - Code quality improvements
 - Fix missing assert in tests
 - Drop support for python older than 3.8
+- Adds read the docs configuration file
 
 0.1.2 (2020-06-09)
 ++++++++++++++++++
