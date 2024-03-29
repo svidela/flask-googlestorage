@@ -40,8 +40,8 @@ class GoogleStorage:
 
         try:
             self._client = cloud.storage.Client()
-        except auth.exceptions.DefaultCredentialsError:
-            app.logger.warning("Could not authenticate the Google Cloud Storage client")
+        except (EnvironmentError, auth.exceptions.DefaultCredentialsError) as e:
+            app.logger.warning(str(e))
             self._client = None
 
         app.extensions = getattr(app, "extensions", {})

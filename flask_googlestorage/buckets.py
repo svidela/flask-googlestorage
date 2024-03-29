@@ -29,7 +29,10 @@ class LocalBucket:
     """
 
     def __init__(
-        self, name: str, destination: Path, resolve_conflicts: bool = False,
+        self,
+        name: str,
+        destination: Path,
+        resolve_conflicts: bool = False,
     ):
         #: The name of this bucket
         self.name = name
@@ -204,7 +207,9 @@ class CloudBucket:
         try:
             if self.tenacity:
                 retry(
-                    reraise=True, retry=retry_if_exception_type(GoogleCloudError), **self.tenacity
+                    reraise=True,
+                    retry=retry_if_exception_type(GoogleCloudError),
+                    **self.tenacity,
                 )(lambda: blob.upload_from_filename(filepath))()
             else:
                 blob.upload_from_filename(filepath)
