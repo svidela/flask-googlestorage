@@ -19,8 +19,8 @@ setup(
     platforms="any",
     install_requires=[
         "flask>=1.1.0",
-        "google-cloud-storage>=1.28.1",
-        "tenacity>=6.2.0",
+        "google-cloud-storage>=2.16",
+        "tenacity>=8.0.0",
     ],
     classifiers=[
         "Development Status :: 4 - Beta",
