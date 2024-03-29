@@ -87,7 +87,8 @@ def test_bucket_save_images_allowed(datadir, images_bucket, local_bucket):
 
 
 @pytest.mark.parametrize(
-    "filename, allowed", [("filename.exe", False), ("filename.txt", True), ("filename.jpg", True)]
+    "filename, allowed",
+    [("filename.exe", False), ("filename.txt", True), ("filename.jpg", True)],
 )
 def test_bucket_allows_by_extension(filename, allowed, empty_txt):
     bucket = Bucket("files", allows=lambda f, p: p.suffix != ".exe")

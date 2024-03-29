@@ -50,8 +50,14 @@ def app_local(app, tmpdir):
     storage = GoogleStorage(files)
     storage.init_app(app)
 
-    files.save(FileStorage(stream=io.BytesIO(b"Foo content"), filename="foo.txt"), uuid_name=False)
-    files.save(FileStorage(stream=io.BytesIO(b"Bar content"), filename="bar.txt"), uuid_name=False)
+    files.save(
+        FileStorage(stream=io.BytesIO(b"Foo content"), filename="foo.txt"),
+        uuid_name=False,
+    )
+    files.save(
+        FileStorage(stream=io.BytesIO(b"Bar content"), filename="bar.txt"),
+        uuid_name=False,
+    )
 
     return app
 
@@ -148,8 +154,14 @@ def app_cloud(google_storage_mock, app, tmpdir):
     storage = GoogleStorage(files, photos)
     storage.init_app(app)
 
-    files.save(FileStorage(stream=io.BytesIO(b"Foo content"), filename="foo.txt"), uuid_name=False)
-    files.save(FileStorage(stream=io.BytesIO(b"Bar content"), filename="bar.txt"), uuid_name=False)
+    files.save(
+        FileStorage(stream=io.BytesIO(b"Foo content"), filename="foo.txt"),
+        uuid_name=False,
+    )
+    files.save(
+        FileStorage(stream=io.BytesIO(b"Bar content"), filename="bar.txt"),
+        uuid_name=False,
+    )
 
     return app
 
@@ -208,7 +220,10 @@ def app_cloud_retry(google_storage_error_mock, app, tmpdir):
             "GOOGLE_STORAGE_TENACITY": {"stop": stop_after_attempt(2)},
             "GOOGLE_STORAGE_FILES_BUCKET": "files-bucket",
             "GOOGLE_STORAGE_PHOTOS_BUCKET": "photos-bucket",
-            "GOOGLE_STORAGE_FILES_TENACITY": {"stop": stop_after_attempt(4), "wait": wait_fixed(1)},
+            "GOOGLE_STORAGE_FILES_TENACITY": {
+                "stop": stop_after_attempt(4),
+                "wait": wait_fixed(1),
+            },
         }
     )
 
