@@ -22,12 +22,12 @@ setup(
         "google-cloud-storage>=2.16",
         "tenacity>=8.0.0",
     ],
-    classifiers=[        
+    classifiers=[
         "Intended Audience :: Developers",
         "Topic :: Internet :: WWW/HTTP",
         "Environment :: Web Environment",
         "Framework :: Flask",
-        "License :: OSI Approved :: MIT License",        
+        "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
