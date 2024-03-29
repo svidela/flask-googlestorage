@@ -3,30 +3,31 @@ Flask-GoogleStorage
 ===================
 
 
-.. image:: https://img.shields.io/pypi/v/flask-googlestorage.svg
+|version| |python| |license| |coverage| |quality| |docs|
+
+.. |version| image:: https://img.shields.io/pypi/v/flask-googlestorage.svg
     :target: https://pypi.org/project/flask-googlestorage/
     :alt: Latest version
 
-.. image:: https://img.shields.io/pypi/pyversions/flask-googlestorage.svg
+.. |python| image:: https://img.shields.io/pypi/pyversions/flask-googlestorage.svg
     :target: https://pypi.org/project/flask-googlestorage/
     :alt: Python versions
 
-.. image:: https://img.shields.io/pypi/l/flask-googlestorage.svg
+.. |license| image:: https://img.shields.io/pypi/l/flask-googlestorage.svg
     :target: https://flask-googlestorage.readthedocs.io/en/latest/license.html
     :alt: License
 
-.. image:: https://codecov.io/gh/svidela/flask-googlestorage/branch/master/graph/badge.svg
+.. |coverage| image:: https://codecov.io/gh/svidela/flask-googlestorage/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/svidela/flask-googlestorage
     :alt: Code coverage
 
-.. image:: https://app.codacy.com/project/badge/Grade/b0317a3f9e8d4cfe8d8ab61c6d92942f
+.. |quality| image:: https://app.codacy.com/project/badge/Grade/b0317a3f9e8d4cfe8d8ab61c6d92942f
     :target: https://app.codacy.com/gh/svidela/flask-googlestorage/
     :alt: Code quality
 
-.. image:: https://readthedocs.org/projects/flask-googlestorage/badge/
+.. |docs| image:: https://readthedocs.org/projects/flask-googlestorage/badge/
     :target: http://flask-googlestorage.readthedocs.io/
     :alt: Documentation
-
 
 Flask-GoogleStorage provides file uploads to Google Cloud Storage for `Flask <https://palletsprojects.com/p/flask/>`_
 
