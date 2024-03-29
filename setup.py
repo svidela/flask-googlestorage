@@ -7,7 +7,7 @@ with open("README.rst", encoding="utf-8") as f:
 
 setup(
     name="Flask-GoogleStorage",
-    version="0.1.2",
+    version="0.2.0",
     url="https://github.com/svidela/flask-googlestorage",
     license="MIT",
     author="Santiago Videla",
