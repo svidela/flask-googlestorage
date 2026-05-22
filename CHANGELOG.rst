@@ -2,6 +2,11 @@
 Changelog
 *********
 
+0.3.0 (unreleased)
+++++++++++++++++++
+
+- Drop support for python older than 3.9
+
 0.2.0 (2024-03-29)
 ++++++++++++++++++
 
