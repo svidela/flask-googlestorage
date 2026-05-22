@@ -15,7 +15,7 @@ setup(
     description="Google Cloud Storage for Flask",
     long_description=long_description,
     packages=find_packages(exclude=["tests*"]),
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     platforms="any",
     install_requires=[
         "flask>=1.1.0",
@@ -28,7 +28,6 @@ setup(
         "Environment :: Web Environment",
         "Framework :: Flask",
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
