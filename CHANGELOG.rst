@@ -5,6 +5,7 @@ Changelog
 0.3.0 (unreleased)
 ++++++++++++++++++
 
+- Adds AGENTS.md
 - Drop support for python older than 3.9
 
 0.2.0 (2024-03-29)
