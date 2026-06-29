@@ -6,7 +6,9 @@ Changelog
 ++++++++++++++++++
 
 - Adds AGENTS.md
-- Drop support for python older than 3.9
+- Adds support for python 3.12, 3.13, and 3.14
+- Drop support for python older than 3.10
+- Fixes a silent testing bug that became a failure in 3.12+
 
 0.2.0 (2024-03-29)
 ++++++++++++++++++
