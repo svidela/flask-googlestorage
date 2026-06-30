@@ -1,9 +1,6 @@
-flake8>=7.3.0
-pytest>=8.4.2
-pytest-cov>=7.1.0
-pytest-datadir>=1.8.0
-filetype>=1.2.0
-tox>=4.30.3
-black>=25.11.0
+tox>=4.56.1
+black>=26.5.1
 bumpversion>=0.6.0
+-r lint-requirements.txt
+-r test-requirements.txt
 -e .
