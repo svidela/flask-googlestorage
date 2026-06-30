@@ -7,7 +7,7 @@ Changelog
 
 - Adds AGENTS.md file
 - Adds support for python 3.12, 3.13, and 3.14
-- Drop support for python older than 3.10
+- Drops support for python older than 3.10
 - Fixes a silent testing bug that became a failure in 3.12+
 - Upgrades Github actions versions
 
