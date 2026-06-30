@@ -33,10 +33,15 @@ def secure_path(filename: str, name: str = None, uuid_name: bool = True) -> Pure
     :returns: A secured filename with the extension in lower case
     """
     ext = PurePath(filename).suffix
+    if ext == ".":
+        ext = ""
 
     if name:
         path = PurePath(name)
         parent, stem, suffix = path.parent, path.stem, path.suffix
+        if suffix == ".":
+            suffix = ""
+
         if stem.endswith("."):
             stem = stem[:-1]
 
