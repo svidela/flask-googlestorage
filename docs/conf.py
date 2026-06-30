@@ -43,8 +43,7 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "flask": ("http://flask.pocoo.org/docs/", None),
     "werkzeug": ("https://werkzeug.palletsprojects.com/", None),
-    "google-cloud-storage": ("https://googleapis.dev/python/storage/latest/index.html", None),
-    "tenacity": ("https://tenacity.readthedocs.io/", None),
+    "tenacity": ("https://tenacity.readthedocs.io/en/latest/", None),
 }
 issues_github_path = "svidela/flask-googlestorage"
 
@@ -82,4 +81,4 @@ html_show_sourcelink = False
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
+# html_static_path = ["_static"]
