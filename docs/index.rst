@@ -6,7 +6,7 @@ Welcome to Flask-GoogleStorage
 Install
 =======
 
-Flask-GoogleStorage requires Python >= 3.9.
+Flask-GoogleStorage requires Python >= 3.10.
 
 .. code-block:: bash
 
