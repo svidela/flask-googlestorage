@@ -16,11 +16,10 @@ from .utils import get_state, secure_path
 
 
 class LocalBucket:
-    """
-    This class represents a local bucket and is mainly used for temporary storage before uploading
-    to Google Cloud Storage. However, if the authentication with Google Cloud Storage fails or the
-    bucket id is not found, this class provides local storage. This is particularly useful in
-    development.
+    """This class represents a local bucket and is mainly used for temporary storage before
+    uploading to Google Cloud Storage. However, if the authentication with Google Cloud Storage
+    fails or the bucket id is not found, this class provides local storage. This is particularly
+    useful in development.
 
     :param name: The name for this bucket.
 
@@ -45,8 +44,7 @@ class LocalBucket:
         self.resolve_conflicts = resolve_conflicts
 
     def url(self, filename: str) -> str:
-        """
-        Returns the URL served by the :py:class:`flask.Flask` application.
+        """Returns the URL served by the :py:class:`flask.Flask` application.
 
         :param filename: The filename to be downloaded from the bucket.
 
@@ -57,8 +55,7 @@ class LocalBucket:
     signed_url = url
 
     def save(self, storage: FileStorage, path: PurePath, **kwargs) -> PurePath:
-        """
-        Save the given file in this bucket and returns its relative path
+        """Save the given file in this bucket and returns its relative path
 
         :param storage: The file to be saved
 
@@ -85,8 +82,7 @@ class LocalBucket:
         return path
 
     def delete(self, filename: str):
-        """
-        Delete the file with the given filename if it exists.
+        """Delete the file with the given filename if it exists.
 
         :param filename: The name of the file to be deleted.
         """
@@ -96,8 +92,7 @@ class LocalBucket:
 
 
 class CloudBucket:
-    """
-    This class represents a bucket in Google Cloud Storage. Apart from the
+    """This class represents a bucket in Google Cloud Storage. Apart from the
     :py:class:`google.cloud.storage.Bucket` instance, it takes all the arguments required and
     accepted by :py:class:`flask_googlestorage.LocalBucket` in order to create a local bucket for
     temporary storage. Uploaded files will be first saved locally using the local bucket and then
@@ -146,8 +141,7 @@ class CloudBucket:
         self.local = LocalBucket(name, destination, resolve_conflicts=resolve_conflicts)
 
     def get_blob(self, name: str) -> storage.Blob:
-        """
-        Get a :py:class:`google.cloud.storage.blob.Blob` instance by name.
+        """Get a :py:class:`google.cloud.storage.blob.Blob` instance by name.
 
         :param name: The blob name.
 
@@ -156,9 +150,8 @@ class CloudBucket:
         return self.bucket.get_blob(name)
 
     def url(self, name: str) -> str:
-        """
-        Returns the public URL served by Google Cloud Storage. The blob should be publicly available
-        in order to actually use this URL.
+        """Returns the public URL served by Google Cloud Storage. The blob should be publicly
+        available in order to actually use this URL.
 
         :param name: The blob name to be downloaded from the bucket
 
@@ -169,8 +162,7 @@ class CloudBucket:
             return blob.public_url
 
     def signed_url(self, name: str) -> str:
-        """
-        Returns the signed URL served by Google Cloud Storage. Use either
+        """Returns the signed URL served by Google Cloud Storage. Use either
         ``GOOGLE_STORAGE_SIGNATURE`` (for all buckets) or ``GOOGLE_STORAGE_X_SIGNATURE`` (for bucket
         ``X``) to configure the arguments passed to
         :py:func:`google.cloud.storage.blob.Blob.generate_signed_url`.
@@ -184,8 +176,7 @@ class CloudBucket:
             return blob.generate_signed_url(**self.signature)
 
     def save(self, storage: FileStorage, path: PurePath, public: bool = False) -> PurePath:
-        """
-        Save the given file in this bucket and returns its relative path
+        """Save the given file in this bucket and returns its relative path
 
         :param storage: The file to be saved.
 
@@ -224,8 +215,7 @@ class CloudBucket:
         return path
 
     def delete(self, name: str):
-        """
-        Delete the blob with the given name if it exists.
+        """Delete the blob with the given name if it exists.
 
         :param name: The name of the blob to be deleted.
         """
@@ -237,8 +227,7 @@ class CloudBucket:
 
 
 class Bucket:
-    """
-    This class represents a bucket of files with either local or cloud storage under the hood.
+    """This class represents a bucket of files with either local or cloud storage under the hood.
 
     :param name: The name for the bucket.
 
@@ -259,10 +248,9 @@ class Bucket:
 
     @contextmanager
     def storage_ctx(self, storage: LocalBucket | CloudBucket):
-        """
-        Context manager to set the given storage object as the current storage for this bucket. Note
-        that is your responsability to set a storage object that implements the required API. This
-        is particulary useful for testing::
+        """Context manager to set the given storage object as the current storage for this
+        bucket. Note that is your responsability to set a storage object that implements the
+        required API. This is particulary useful for testing::
 
             bucket = Bucket("files")
             with bucket.storage_ctx(mock.MagicMock()) as storage_mock:
@@ -281,8 +269,7 @@ class Bucket:
 
     @property
     def storage(self) -> LocalBucket | CloudBucket:
-        """
-        Returns either ``self._storage`` or the storage object for this bucket from the extension
+        """Returns either ``self._storage`` or the storage object for this bucket from the extension
         state for the current application instance.
 
         :returns: The current configured storage for this bucket
@@ -297,10 +284,9 @@ class Bucket:
             raise NotFoundBucketError(f"Storage for bucket '{self.name}' not found") from err
 
     def allows(self, file_storage: FileStorage, path: PurePath) -> bool:
-        """
-        Returns whether the given file is allowed in this bucket. By default, all files are allowed
-        unless you create the bucket passing the ``allows`` parameter. In that case, it returns the
-        value returned by such a callable.
+        """Returns whether the given file is allowed in this bucket. By default, all files are
+        allowed unless you create the bucket passing the ``allows`` parameter. In that case, it
+        returns the value returned by such a callable.
 
         :param file_storage: The file to be saved.
 
@@ -317,8 +303,7 @@ class Bucket:
         public: bool = False,
         uuid_name: bool = True,
     ) -> PurePath:
-        """
-        Save the given file in this bucket and returns its relative path
+        """Save the given file in this bucket and returns its relative path
 
         :param storage: The file to be saved.
 
@@ -340,7 +325,6 @@ class Bucket:
 
         :raises NotAllowedUploadError: If the given file is not allowed in this bucket.
         """
-
         if not isinstance(file_storage, FileStorage):
             raise TypeError(
                 "The given storage must be a werkzeug.datastructures.FileStorage instance"
@@ -354,16 +338,14 @@ class Bucket:
         return self.storage.save(file_storage, secured_path, public=public)
 
     def delete(self, filename: str):
-        """
-        Delete the file with the given name if it exists.
+        """Delete the file with the given name if it exists.
 
         :param name: The name of the file to be deleted.
         """
         self.storage.delete(filename)
 
     def url(self, filename: str) -> str:
-        """
-        Returns the public URL returned by the current storage object.
+        """Returns the public URL returned by the current storage object.
 
         :param name: The name of the file to be downloaded from the bucket
 
@@ -372,8 +354,7 @@ class Bucket:
         return self.storage.url(filename)
 
     def signed_url(self, filename: str) -> str:
-        """
-        Returns the signed URL returned by the current storage object.
+        """Returns the signed URL returned by the current storage object.
 
         :param name: The name of the file to be downloaded from the bucket
 

@@ -9,8 +9,7 @@ from .exceptions import NotFoundDestinationError
 
 
 class GoogleStorage:
-    """
-    This is the main extension class. Typically you should create one instance per application
+    """This is the main extension class. Typically you should create one instance per application
     passing your defined buckets (instances of :py:class:`flask_googlestorage.Bucket`). Make sure
     you call :py:func:`init_app` before start using your buckets. If the application instance is
     given at creation time, :py:func:`init_app` is called for you.
@@ -23,8 +22,7 @@ class GoogleStorage:
             self.init_app(app)
 
     def init_app(self, app: Flask):
-        """
-        Initialize the extension for the given :py:class:`flask.Flask` application instance
+        """Initialize the extension for the given :py:class:`flask.Flask` application instance
 
         :param app: The application instance
         """
