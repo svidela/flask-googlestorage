@@ -20,14 +20,14 @@ def test_name_alnum():
 
 def test_config_runtime_error(bucket):
     with pytest.raises(RuntimeError) as e_info:
-        bucket.storage  # noqa
+        return bucket.storage
 
     assert "Working outside of application context." in str(e_info.value)
 
 
 def test_config_not_init_error(app, bucket):
     with pytest.raises(AssertionError) as e_info:
-        bucket.storage  # noqa
+        return bucket.storage
 
     assert str(e_info.value) == (
         "The googlestorage extension was not registered to the current "
@@ -38,7 +38,7 @@ def test_config_not_init_error(app, bucket):
 def test_config_not_found_error(app_init):
     with pytest.raises(NotFoundBucketError) as e_info:
         bucket = Bucket("music")
-        bucket.storage  # noqa
+        return bucket.storage
 
     assert str(e_info.value) == "Storage for bucket 'music' not found"
 
