@@ -2,13 +2,13 @@ import pathlib
 from unittest import mock
 
 import pytest
+
 from flask import url_for
-from google.cloud.exceptions import GoogleCloudError
 from werkzeug.datastructures import FileStorage
 
-
 from flask_googlestorage import Bucket
-from flask_googlestorage.exceptions import NotFoundBucketError, NotAllowedUploadError
+from flask_googlestorage.exceptions import NotAllowedUploadError, NotFoundBucketError
+from google.cloud.exceptions import GoogleCloudError
 
 
 def test_name_alnum():
@@ -20,14 +20,14 @@ def test_name_alnum():
 
 def test_config_runtime_error(bucket):
     with pytest.raises(RuntimeError) as e_info:
-        bucket.storage  # pylint: disable=pointless-statement
+        bucket.storage  # noqa
 
     assert "Working outside of application context." in str(e_info.value)
 
 
 def test_config_not_init_error(app, bucket):
     with pytest.raises(AssertionError) as e_info:
-        bucket.storage  # pylint: disable=pointless-statement
+        bucket.storage  # noqa
 
     assert str(e_info.value) == (
         "The googlestorage extension was not registered to the current "
@@ -38,7 +38,7 @@ def test_config_not_init_error(app, bucket):
 def test_config_not_found_error(app_init):
     with pytest.raises(NotFoundBucketError) as e_info:
         bucket = Bucket("music")
-        bucket.storage  # pylint: disable=pointless-statement
+        bucket.storage  # noqa
 
     assert str(e_info.value) == "Storage for bucket 'music' not found"
 

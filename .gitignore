@@ -8,3 +8,6 @@ __pycache__
 docs/_build
 build
 dist
+
+.venv
+.ruff_cache

@@ -1,16 +1,17 @@
 import base64
 import hashlib
+from collections.abc import Callable
 from contextlib import contextmanager
-from typing import Union, Callable
-from pathlib import PurePath, Path
+from pathlib import Path, PurePath
 
 from flask import current_app, url_for
+from werkzeug.datastructures import FileStorage
+
 from google.cloud import storage
 from google.cloud.exceptions import GoogleCloudError
 from tenacity import retry, retry_if_exception_type
-from werkzeug.datastructures import FileStorage
 
-from .exceptions import NotFoundBucketError, NotAllowedUploadError
+from .exceptions import NotAllowedUploadError, NotFoundBucketError
 from .utils import get_state, secure_path
 
 
@@ -257,7 +258,7 @@ class Bucket:
         self._storage = None
 
     @contextmanager
-    def storage_ctx(self, storage: Union[LocalBucket, CloudBucket]):
+    def storage_ctx(self, storage: LocalBucket | CloudBucket):
         """
         Context manager to set the given storage object as the current storage for this bucket. Note
         that is your responsability to set a storage object that implements the required API. This
@@ -279,7 +280,7 @@ class Bucket:
         self._storage = None
 
     @property
-    def storage(self) -> Union[LocalBucket, CloudBucket]:
+    def storage(self) -> LocalBucket | CloudBucket:
         """
         Returns either ``self._storage`` or the storage object for this bucket from the extension
         state for the current application instance.
@@ -292,8 +293,8 @@ class Bucket:
         cfg = get_state(current_app)["buckets"]
         try:
             return cfg[self.name]
-        except KeyError:
-            raise NotFoundBucketError(f"Storage for bucket '{self.name}' not found")
+        except KeyError as err:
+            raise NotFoundBucketError(f"Storage for bucket '{self.name}' not found") from err
 
     def allows(self, file_storage: FileStorage, path: PurePath) -> bool:
         """

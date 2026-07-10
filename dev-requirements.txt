@@ -1,6 +1,0 @@
-tox>=4.56.4
-black>=26.5.1
-bumpversion>=0.6.0
--r lint-requirements.txt
--r test-requirements.txt
--e .

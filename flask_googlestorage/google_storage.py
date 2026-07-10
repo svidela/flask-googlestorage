@@ -1,11 +1,11 @@
 from pathlib import Path
-from typing import Union, Tuple
 
-from flask import Flask, Blueprint, send_from_directory
+from flask import Blueprint, Flask, send_from_directory
+
 from google import auth, cloud
 
+from .buckets import Bucket, CloudBucket, LocalBucket
 from .exceptions import NotFoundDestinationError
-from .buckets import LocalBucket, CloudBucket, Bucket
 
 
 class GoogleStorage:
@@ -16,7 +16,7 @@ class GoogleStorage:
     given at creation time, :py:func:`init_app` is called for you.
     """
 
-    def __init__(self, *buckets: Tuple[Bucket, ...], app: Flask = None):
+    def __init__(self, *buckets: tuple[Bucket, ...], app: Flask = None):
         self.buckets = buckets
 
         if app is not None:
@@ -33,14 +33,14 @@ class GoogleStorage:
 
         try:
             uploads_dest = Path(self._app.config[f"{self._prefix}_LOCAL_DEST"])
-        except KeyError:
+        except KeyError as err:
             raise NotFoundDestinationError(
                 "You must set the 'GOOGLE_STORAGE_LOCAL_DEST' configuration variable"
-            )
+            ) from err
 
         try:
             self._client = cloud.storage.Client()
-        except (EnvironmentError, auth.exceptions.DefaultCredentialsError) as e:
+        except (OSError, auth.exceptions.DefaultCredentialsError) as e:
             app.logger.warning(str(e))
             self._client = None
 
@@ -57,7 +57,7 @@ class GoogleStorage:
         for bucket in self.buckets:
             ext["buckets"][bucket.name] = self._create_bucket(uploads_dest, bucket)
 
-    def _create_bucket(self, uploads_dest: Path, bucket: Bucket) -> Union[LocalBucket, CloudBucket]:
+    def _create_bucket(self, uploads_dest: Path, bucket: Bucket) -> LocalBucket | CloudBucket:
         cfg = self._app.config
         prefix = f"{self._prefix}_{bucket.name.upper()}"
 

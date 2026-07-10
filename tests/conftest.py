@@ -3,19 +3,20 @@ import pathlib
 from unittest import mock
 
 import pytest
-import filetype
+
 from flask import Flask
-from google.cloud.exceptions import NotFound, GoogleCloudError
-from tenacity import wait_fixed, stop_after_attempt
 from werkzeug.datastructures import FileStorage
 
+import filetype
 from flask_googlestorage import (
-    GoogleStorage,
     Bucket,
-    LocalBucket,
     CloudBucket,
+    GoogleStorage,
+    LocalBucket,
     NotAllowedUploadError,
 )
+from google.cloud.exceptions import GoogleCloudError, NotFound
+from tenacity import stop_after_attempt, wait_fixed
 
 
 @pytest.fixture
