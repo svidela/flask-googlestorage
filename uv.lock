@@ -9,7 +9,7 @@ resolution-markers = [
 ]
 
 [options]
-exclude-newer = "2026-07-03T03:19:49.805105Z"
+exclude-newer = "2026-07-03T13:52:10.799256Z"
 exclude-newer-span = "P1W"
 
 [[package]]
@@ -547,7 +547,7 @@ tests = [
 
 [package.metadata]
 requires-dist = [
-    { name = "flask", specifier = ">=1.1.0" },
+    { name = "flask", specifier = ">=2.0.0" },
     { name = "google-cloud-storage", specifier = ">=2.16" },
     { name = "tenacity", specifier = ">=8.0.0" },
 ]
