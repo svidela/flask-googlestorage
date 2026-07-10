@@ -18,9 +18,8 @@ flask-googlestorage/
 │   └── utils.py             # Internal helper functions
 ├── tests/                   # Unit test suite
 ├── AGENTS.md                # This rules and guidelines file
-├── pyproject.toml           # PEP 518 build system requirements
-├── setup.cfg                # Configuration file for bumpversion and pydocstyle
-├── setup.py                 # Distutils setup script
+├── pyproject.toml           # PEP 518 build system and tool configuration (Ruff, uv)
+├── setup.cfg                # Configuration file for bumpversion
 └── tox.ini                  # Tox configuration mapping Python environments and commands
 ```
 
@@ -31,7 +30,7 @@ flask-googlestorage/
 - Always write clean Python code adhering to PEP 8 standards.
 - Use 4 spaces for indentation.
 
-### 2. Line Length and Complexity (flake8)
+### 2. Line Length and Complexity
 
 - **Line Length**: Hard limit of **100 characters** per line.
 - **Complexity**: Maximum cyclomatic complexity of **10**.
@@ -40,7 +39,7 @@ flask-googlestorage/
 ### 3. Sphinx/RST Docstrings
 
 - Use Sphinx-style (reStructuredText) syntax for all docstrings.
-- Docstrings are checked via `pydocstyle` (configuration in setup.cfg).
+- Docstrings and code styling are linted and formatted via `ruff`.
 
 ### 4. Type Annotations
 
@@ -55,7 +54,6 @@ flask-googlestorage/
 ### 2. Running Linting and Tests
 
 - **Tox**: Tests and linting must be run using `tox`.
-- **Python Environment**: Use the designated virtual environment containing the project dependencies and testing tools.
 - **Commands**:
-  - Run linting: `tox -e lint`
-  - Run all tests: `tox`
+  - Run linting: `uv run tox -e lint`
+  - Run all tests: `uv run tox -e py310,py311,py312,py313,py314`

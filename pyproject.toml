@@ -1,3 +1,98 @@
+[project]
+name = "flask-googlestorage"
+dynamic = ["version"]
+description = "Google Cloud Storage for Flask"
+readme = "README.rst"
+license = "MIT"
+authors = [{ name = "Santiago Videla", email = "santiago.videla@gmail.com" }]
+maintainers = [
+  { name = "Santiago Videla", email = "santiago.videla@gmail.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Topic :: Internet :: WWW/HTTP",
+  "Environment :: Web Environment",
+  "Framework :: Flask",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+requires-python = ">=3.10"
+dependencies = [
+  "flask>=2.0.0",
+  "google-cloud-storage>=2.16",
+  "tenacity>=8.0.0",
+]
+
+[project.urls]
+Changelog = "https://flask-googlestorage.readthedocs.io/en/latest/changelog.html"
+Issues = "https://github.com/svidela/flask-googlestorage/issues"
+Source = "https://github.com/svidela/flask-googlestorage"
+
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "flask_googlestorage.__version__"}
+
+[dependency-groups]
+docs = [
+  "sphinx",
+  "sphinx-issues",
+  "pallets-sphinx-themes",
+]
+
+tests = [
+  "packaging",
+  "pytest",
+  "pytest-cov",
+  "pytest-datadir",
+  "filetype"
+]
+lint = ["ruff"]
+dev = [
+  { include-group = "tests" },
+  { include-group = "lint" },
+  "tox",
+  "tox-uv",
+]
+
+[tool.uv]
+default-groups = ["dev"]
+exclude-newer = "1 week"
+
+[tool.ruff]
+src = ["flask_googlestorage"]
+fix = true
+show-fixes = true
+output-format = "full"
+line-length = 100
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = [
+  "B",   # flake8-bugbear
+  "E",   # pycodestyle error
+  "F",   # pyflakes
+  "I",   # isort
+  "UP",  # pyupgrade
+  "W",   # pycodestyle warning
+  "C90", # mccabe
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.isort]
+section-order = ["future", "standard-library", "testing", "pallets", "third-party", "first-party", "local-folder"]
+
+[tool.ruff.lint.isort.sections]
+testing = ["pytest"]
+pallets = ["werkzeug", "flask", "click"]

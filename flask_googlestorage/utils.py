@@ -6,8 +6,7 @@ from werkzeug.utils import secure_filename
 
 
 def get_state(app: Flask) -> dict:
-    """
-    Gets the extension state for the given application
+    """Gets the extension state for the given application
 
     :param app: The application instance
     :returns: The extension state for the given application
@@ -20,9 +19,8 @@ def get_state(app: Flask) -> dict:
 
 
 def secure_path(filename: str, name: str = None, uuid_name: bool = True) -> PurePath:
-    """
-    This is a helper used by :py:func:`flask_googlestorage.Bucket.save` to get a secured path. with
-    the file extension in lower case.
+    """This is a helper used by :py:func:`flask_googlestorage.Bucket.save` to get a secured
+    path with the file extension in lower case.
 
     :param filename: The original filename.
 

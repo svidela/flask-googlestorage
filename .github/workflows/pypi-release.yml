@@ -10,24 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v1
-        with:
-          python-version: "3.10"
-      - name: Install pep517
-        run: >-
-          python -m
-          pip install
-          pep517
-          --user
-      - name: Build a binary wheel and a source tarball
-        run: >-
-          python -m
-          pep517.build
-          --source
-          --binary
-          --out-dir dist/
-          .
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+      - name: Build package
+        run: uv build
       - name: Publish distribution to PyPI
         uses: pypa/gh-action-pypi-publish@master
         with:

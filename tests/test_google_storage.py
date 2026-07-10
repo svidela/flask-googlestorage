@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from flask_googlestorage import GoogleStorage, Bucket
-from flask_googlestorage.buckets import LocalBucket, CloudBucket
+from flask_googlestorage import Bucket, GoogleStorage
+from flask_googlestorage.buckets import CloudBucket, LocalBucket
 from flask_googlestorage.exceptions import NotFoundDestinationError
 from flask_googlestorage.utils import get_state
 
