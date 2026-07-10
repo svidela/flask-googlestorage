@@ -3,5 +3,5 @@ include *.rst LICENSE
 graft docs
 prune docs/_build
 
-graft test
-include dev-requirements.txt tox.ini
+graft tests
+include tox.ini
