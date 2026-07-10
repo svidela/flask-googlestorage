@@ -19,8 +19,8 @@ jobs:
         uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Run tox
-        run: uv run tox
+      - name: Run tests
+        run: uv run tox -e py
       - name: "Upload coverage to Codecov"
         uses: "codecov/codecov-action@v6"
         with:
