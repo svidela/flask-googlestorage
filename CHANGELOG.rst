@@ -10,6 +10,8 @@ Changelog
 - Drops support for python older than 3.10
 - Fixes a silent testing bug that became a failure in 3.12+
 - Upgrades Github actions versions
+- Migrates development workflows and tooling to uv and ruff
+- Bumps the minimum Flask dependency version to 2.0.0
 
 0.2.0 (2024-03-29)
 ++++++++++++++++++
