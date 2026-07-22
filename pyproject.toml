@@ -55,6 +55,7 @@ lint = ["ruff"]
 dev = [
   { include-group = "tests" },
   { include-group = "lint" },
+  "bumpversion>=0.6.0",
   "tox",
   "tox-uv",
 ]
