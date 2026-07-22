@@ -2,7 +2,7 @@
 Changelog
 *********
 
-0.3.1 (unreleased)
+0.3.1 (2026-07-22)
 ++++++++++++++++++
 
 - Update PyPI release GitHub Action to release/v1 and use PyPI Trusted Publishing
