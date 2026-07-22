@@ -34,11 +34,8 @@ Issues = "https://github.com/svidela/flask-googlestorage/issues"
 Source = "https://github.com/svidela/flask-googlestorage"
 
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools.dynamic]
-version = {attr = "flask_googlestorage.__version__"}
+requires = ["flit_core >=3.11,<4"]
+build-backend = "flit_core.buildapi"
 
 [dependency-groups]
 docs = [
